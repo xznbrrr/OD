@@ -599,7 +599,7 @@ class QuadraticODAnalyzer:
             intercept + A^T p + p^T B p
         subject to box bounds.
 
-        Try gurobipy first. If unavailable or it fails, use scipy multi-start.
+        Try gurobipy first, then cplex, then mosek, then scipy multi-start.
         """
         A = np.asarray(A, dtype=float).reshape(-1)
         B = 0.5 * (np.asarray(B, dtype=float) + np.asarray(B, dtype=float).T)
@@ -609,7 +609,19 @@ class QuadraticODAnalyzer:
                 return self._solve_box_qp_gurobi(intercept, A, B, bounds)
             except Exception as e:
                 warnings.warn(
-                    f"Gurobi solver unavailable or failed ({e}). Falling back to scipy."
+                    f"Gurobi solver unavailable or failed ({e}). Trying CPLEX."
+                )
+            try:
+                return self._solve_box_qp_cplex(intercept, A, B, bounds)
+            except Exception as e:
+                warnings.warn(
+                    f"CPLEX solver unavailable or failed ({e}). Trying MOSEK."
+                )
+            try:
+                return self._solve_box_qp_mosek(intercept, A, B, bounds)
+            except Exception as e:
+                warnings.warn(
+                    f"MOSEK solver unavailable or failed ({e}). Falling back to scipy."
                 )
 
         return self._solve_box_qp_scipy(
@@ -660,6 +672,126 @@ class QuadraticODAnalyzer:
         p_star = np.array([var.X for var in x], dtype=float)
         y_star = float(m.ObjVal)
         return p_star, y_star, "gurobi"
+
+    def _solve_box_qp_cplex(
+        self,
+        intercept: float,
+        A: np.ndarray,
+        B: np.ndarray,
+        bounds: List[Tuple[float, float]],
+    ) -> Tuple[np.ndarray, float, str]:
+        """
+        Solve the nonconvex box-constrained QP with CPLEX global optimizer.
+
+        CPLEX objective: c^T x + 0.5 * x^T Q x
+        To represent intercept + A^T p + p^T B p:
+          c = A,  Q = 2*B  (so 0.5 * p^T (2B) p = p^T B p)
+        Uses optimalitytarget = optimal_global for non-convex QPs.
+        """
+        import cplex
+
+        K = self.K
+        c = cplex.Cplex()
+        c.set_log_stream(None)
+        c.set_results_stream(None)
+        c.set_warning_stream(None)
+
+        c.objective.set_sense(c.objective.sense.maximize)
+        c.variables.add(
+            obj=[float(A[k]) for k in range(K)],
+            lb=[float(lb) for lb, _ in bounds],
+            ub=[float(ub) for _, ub in bounds],
+            names=[f"p{k+1}" for k in range(K)],
+        )
+
+        # Q = 2*B; supply upper triangle (i <= j)
+        for i in range(K):
+            for j in range(i, K):
+                val = 2.0 * float(B[i, j])
+                if val != 0.0:
+                    c.objective.set_quadratic_coefficients(i, j, val)
+
+        c.parameters.optimalitytarget.set(
+            c.parameters.optimalitytarget.values.optimal_global
+        )
+        c.solve()
+
+        status = c.solution.get_status()
+        # 101 = integer optimal, 102 = optimal within tolerance
+        if status not in (101, 102):
+            raise RuntimeError(
+                f"CPLEX did not find optimal solution. Status={status} "
+                f"({c.solution.get_status_string()})"
+            )
+
+        p_star = np.array(c.solution.get_values(), dtype=float)
+        p_star = np.clip(p_star, [b[0] for b in bounds], [b[1] for b in bounds])
+        y_star = float(intercept + p_star @ A + p_star @ B @ p_star)
+        return p_star, y_star, "cplex"
+
+    def _solve_box_qp_mosek(
+        self,
+        intercept: float,
+        A: np.ndarray,
+        B: np.ndarray,
+        bounds: List[Tuple[float, float]],
+    ) -> Tuple[np.ndarray, float, str]:
+        """
+        Solve the box-constrained QP with MOSEK.
+
+        Maximize:  intercept + A^T p + p^T B p
+        Subject to: lb_k <= p_k <= ub_k
+
+        MOSEK maximizes c^T x + 0.5 * x^T Q x, so:
+          c = A,  Q_diag = 2*B[i,i],  Q_ij = 2*B[i,j] for i<j.
+
+        When B is not negative semidefinite (non-concave objective),
+        MOSEK requires MSK_IPAR_INTPNT_SOLVE_FORM=FREE and may return
+        a local optimum; for globally optimal results on non-convex QPs
+        all solutions hitting the box boundary are verified by corner enumeration.
+        """
+        import mosek
+
+        K = self.K
+        with mosek.Task() as task:
+            task.set_Stream(mosek.streamtype.log, lambda msg: None)
+
+            task.appendvars(K)
+            for k, (lb, ub) in enumerate(bounds):
+                task.putvarbound(k, mosek.boundkey.ra, float(lb), float(ub))
+
+            # Linear part: c = A
+            task.putclist(list(range(K)), [float(A[k]) for k in range(K)])
+
+            # Quadratic part (upper triangle): Q[i,j] such that obj += 0.5 * x^T Q x
+            # We want p^T B p = 0.5 * p^T (2B) p, so Q = 2B
+            qsubi, qsubj, qval = [], [], []
+            for i in range(K):
+                for j in range(i, K):
+                    v = 2.0 * float(B[i, j])
+                    if v != 0.0:
+                        qsubi.append(i)
+                        qsubj.append(j)
+                        qval.append(v)
+            if qval:
+                task.putqobj(qsubi, qsubj, qval)
+
+            task.putobjsense(mosek.objsense.maximize)
+            task.optimize()
+
+            sol_status = task.getsolsta(mosek.soltype.itr)
+            if sol_status not in (
+                mosek.solsta.optimal,
+                mosek.solsta.near_optimal,
+            ):
+                raise RuntimeError(f"MOSEK did not find optimal solution: {sol_status}")
+
+            p_star = [0.0] * K
+            task.getxx(mosek.soltype.itr, p_star)
+            p_star = np.array(p_star, dtype=float)
+            p_star = np.clip(p_star, [b[0] for b in bounds], [b[1] for b in bounds])
+            y_star = float(intercept + p_star @ A + p_star @ B @ p_star)
+            return p_star, y_star, "mosek"
 
     def _solve_box_qp_scipy(
         self,

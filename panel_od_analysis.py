@@ -572,8 +572,8 @@ def run_outcome_analysis(
     full_a, full_b = _surface_from_centered_result(full_main, centered_cols, square_terms, cross_terms)
     centered_bounds = [metadata["centered_bounds"][col] for col in centered_cols]
 
-    prefer_gurobi = joint_opt_solver == "gurobi"
-    required_solver = "gurobi" if prefer_gurobi else None
+    prefer_gurobi = joint_opt_solver in ("gurobi", "mosek", "cplex")
+    required_solver = None
 
     additive_p_centered, additive_value, additive_hit_bounds, additive_solver_used = optimize_quadratic_surface(
         intercept=0.0,
@@ -885,8 +885,8 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--joint-opt-solver",
-        choices=["scipy", "gurobi"],
-        default="scipy",
+        choices=["gurobi", "mosek", "cplex"],
+        default="cplex",
         help="Solver used for additive and full-model joint optimum calculations.",
     )
     return parser.parse_args()
