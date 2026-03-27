@@ -44,41 +44,38 @@ conda activate ambu
 All three models fit the outcome (ROA or Tobin's Q) as a function of the 6 strategy variables. In the empirical pipeline, all models include firm and year fixed effects absorbed via alternating projections and two-way clustered standard errors.
 
 ### Model 1 — Individual (Single-Variable)
-Fit a separate quadratic for each dimension independently:
 
-```
-y = α + β₁·xₖ + β₂·xₖ²  +  ε     (for each k = 1…6 separately)
-```
+Fit a separate quadratic for each dimension $k$ independently:
+
+$$y = \alpha + \beta_1 x_k + \beta_2 x_k^2 + \varepsilon, \quad k = 1, \ldots, 6$$
 
 Optimize each dimension independently; combine the 6 per-dimension optima into one joint strategy vector.
 
 ### Model 2 — Additive
+
 One joint regression with linear and squared terms, no cross terms:
 
-```
-y = α + Σₖ(βₖ·xₖ + γₖ·xₖ²)  +  ε
-```
+$$y = \alpha + \sum_{k=1}^{6} \left( \beta_k x_k + \gamma_k x_k^2 \right) + \varepsilon$$
 
 Optimized jointly (separable across dimensions).
 
 ### Model 3 — Full Quadratic
+
 All linear, squared, and pairwise cross terms:
 
-```
-y = α + Σₖ(βₖ·xₖ + γₖ·xₖ²) + Σᵢ﹤ⱼ δᵢⱼ·xᵢ·xⱼ  +  ε
-```
+$$y = \alpha + \sum_{k=1}^{6} \left( \beta_k x_k + \gamma_k x_k^2 \right) + \sum_{i < j} \delta_{ij}\, x_i x_j + \varepsilon$$
 
 Optimized jointly via a box-constrained QP (potentially non-convex due to cross terms — requires Gurobi/CPLEX).
 
 ### Optimality Gap
+
 The **full quadratic model is the benchmark** — the best estimated surface.
 For empirical results, gaps are relative to the full model's estimated optimum.
 For simulation, gaps are relative to the *true* noiseless optimum.
 
-```
-gap   = f*(M3) - f(x*_model)
-% gap = gap / |f*(M3)| × 100
-```
+$$\text{gap} = f^{\ast}_{M3} - f\!\left(x^{\ast}_{\text{model}}\right)$$
+
+$$\text{gap}_{\%} = \frac{\text{gap}}{\left| f^{\ast}_{M3} \right|} \times 100$$
 
 ---
 
@@ -140,44 +137,74 @@ The large gaps show that cross-term interactions between strategy dimensions are
 
 ## Running the Simulation
 
-Generates synthetic data from a known quadratic generator, fits all three models, and compares the *true* (noiseless) outcome at each model's optimal solution.
+Generates synthetic data from a known quadratic generator, fits all three models, and compares the *true* (noiseless) revenue at each model's optimal solution against the true optimum.
+
+### Quick start
 
 ```bash
 conda run -n ambu python simulate_od.py
 ```
 
-No arguments needed. Key configuration at the top of `simulate_od.py`:
+No arguments needed. All configuration is edited directly at the top of `simulate_od.py`.
 
-| Parameter | Value | Description |
-|-----------|-------|-------------|
-| `K` | 6 | Number of strategy dimensions |
-| `N` | 100 | Sample size |
-| `NOISE_STD` | 4.0 | Gaussian noise on observed outcome |
-| `BOUNDS` | `[0, 1]^6` | Box constraints for optimization |
-| `TRUE_INTERCEPT` | 5.0 | Baseline revenue level (true optimum clearly above 0) |
+### Configuration
 
-**True generator design:**
-- Diagonal quadratic terms (`B_ii < 0`): each dimension is individually concave, guaranteeing interior optima in `[0, 1]`
-- Cross terms (`c_ij ~ Uniform[−2, 2]`): couple dimensions, making the full Hessian indefinite
-- True optimum solved exactly by Gurobi on the noiseless surface
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `K` | `6` | Number of strategy dimensions |
+| `N` | `100` | Sample size (smaller → noisier estimates → larger gaps) |
+| `NOISE_STD` | `4.0` | Std dev of Gaussian noise added to observed outcome |
+| `BOUNDS` | `[(0.0, 1.0)] * 6` | Box constraints for each dimension |
+| `TRUE_INTERCEPT` | `5.0` | Baseline revenue level (ensures true optimum is clearly positive) |
+| `TRUE_BDIAG` | `[-4, -3, -5, -4.5, -3.5, -4.2]` | Per-dimension quadratic curvature (must be negative) |
+| `TARGET_OPT` | `[0.40, 0.60, 0.50, 0.45, 0.65, 0.35]` | Target interior optima for each dimension |
+| `SEED` | `42` | Random seed for reproducibility |
 
-**Output files** (written to `output/`):
+To tune the difficulty of the estimation problem:
+- **Increase gaps**: reduce `N` (e.g. 50–100) or increase `NOISE_STD` (e.g. 3.0–5.0)
+- **Decrease gaps**: increase `N` (e.g. 500–1000) or reduce `NOISE_STD` (e.g. 0.5–1.0)
+- **Strengthen cross-term interactions**: widen the `rng.uniform` range for `cross_vals` (default `[-2, 2]`)
+
+### True generator design
+
+The noiseless revenue function has the form:
+
+$$f(x) = c + \mathbf{a}^\top x + x^\top B x$$
+
+where:
+- $c$ = `TRUE_INTERCEPT` (shifts baseline revenue above zero)
+- $\mathbf{a}$ is set so the unconstrained per-dimension optimum lands at `TARGET_OPT`
+- $B$ has **negative diagonal** (`TRUE_BDIAG`) → each $x_k$ slice is individually concave, guaranteeing interior optima in $[0, 1]$
+- $B$ has **random off-diagonal** cross terms $\sim \text{Uniform}[-2, 2]$ → couples dimensions and makes the full Hessian indefinite
+- The true global optimum $x^\ast$ is found exactly by Gurobi (`NonConvex=2`) on the noiseless surface
+
+### What the simulation measures
+
+Each model is estimated from the noisy sample, its optimal strategy $\hat{x}^\ast$ is found by QP, and the **true** (noiseless) revenue $f(\hat{x}^\ast)$ is evaluated and compared against $f(x^\ast)$:
+
+| Source of gap | Affected models |
+|--------------|----------------|
+| Omitted cross terms (model misspecification) | M1, M2 |
+| Noisy coefficient estimates (finite sample) | M1, M2, M3 |
+| Overfitting from too many parameters | M3 (when N is small) |
+
+### Output files (written to `output/`)
 
 | File | Contents |
 |------|----------|
-| `sim_comparison.csv` | True outcome + absolute/% optimality gap per model |
-| `sim_dim_optima.csv` | Per-dimension optimal values for each model vs truth |
+| `sim_comparison.csv` | True revenue + absolute and % optimality gap per model |
+| `sim_dim_optima.csv` | Per-dimension optimal values: truth vs M1 vs M2 vs M3 |
 
-**Example results** (N=100, noise_std=4.0):
+### Example results (N=100, noise_std=4.0)
 
-| Model | True ROA at x* | % Gap vs True Opt |
-|-------|---------------|-------------------|
+| Model | True Revenue at $\hat{x}^\ast$ | % Gap |
+|-------|-------------------------------|-------|
 | True Optimum | 14.016 | — |
 | M3 Full Quadratic | 11.537 | 17.7% |
 | M2 Additive | 10.608 | 24.3% |
 | M1 Individual | 10.532 | 24.9% |
 
-With small N and high noise, M3 overfits the cross terms (28 parameters from 100 observations), producing larger gaps than M2. This demonstrates the bias-variance tradeoff in strategy optimization: a more flexible model does not always yield better decisions under noisy, limited data.
+With small N and high noise, M3 overfits the 15 cross-term coefficients (28 parameters from 100 observations), so its estimated surface leads Gurobi to the wrong region of the box. M2 and M1 are more robust here because they have fewer parameters to misestimate. This illustrates the **bias-variance tradeoff in strategy optimization**: a richer model does not always yield better decisions under limited, noisy data.
 
 ---
 
