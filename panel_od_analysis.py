@@ -599,6 +599,12 @@ def run_outcome_analysis(
     full_p_raw = full_p_centered + centers
 
     full_at_additive = _evaluate_surface(0.0, full_a, full_b, additive_p_centered)
+
+    # M1 combined: collect each variable's individual optimum, convert to centered space,
+    # then evaluate the full quadratic surface at that joint point.
+    m1_p_raw = np.array([row["optimal_x"] for row in single_rows], dtype=float)
+    m1_p_centered = m1_p_raw - centers
+    full_at_single_combined = _evaluate_surface(0.0, full_a, full_b, m1_p_centered)
     additive_wald = _wald_test(additive_main.params, additive_main.covariance, additive_main.design_columns, additive_regressors)
     full_all_wald = _wald_test(full_main.params, full_main.covariance, full_main.design_columns, full_regressors)
     full_cross_wald = _wald_test(full_main.params, full_main.covariance, full_main.design_columns, cross_terms)
@@ -620,6 +626,16 @@ def run_outcome_analysis(
     optimal_comparison["full_surface_gain_vs_additive_optimum"] = full_value - full_at_additive
     optimal_comparison["additive_solver_used"] = additive_solver_used
     optimal_comparison["full_solver_used"] = full_solver_used
+
+    # Optimality gaps: full model is the benchmark (best estimated surface).
+    # Gap = full_surface_optimum - full_surface_at_model_x*
+    # %Gap = gap / |full_surface_optimum| * 100
+    _full_opt = full_value
+    optimal_comparison["full_surface_at_single_combined_optimum"] = full_at_single_combined
+    optimal_comparison["m1_gap"] = _full_opt - full_at_single_combined
+    optimal_comparison["m1_gap_pct"] = (_full_opt - full_at_single_combined) / abs(_full_opt) * 100
+    optimal_comparison["m2_gap"] = _full_opt - full_at_additive
+    optimal_comparison["m2_gap_pct"] = (_full_opt - full_at_additive) / abs(_full_opt) * 100
 
     robustness_rows = []
     extra_warning_rows = []

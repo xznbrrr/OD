@@ -29,20 +29,20 @@ Replicates and extends Miller (2013) — studies strategic conformity of Fortune
 - Problem: `maximize intercept + A^T p + p^T B p  s.t.  lb ≤ p ≤ ub`
 - B is **indefinite** (OLS regression) — requires a **global** non-convex QP solver
 - Solver chain (in order): **Gurobi** → **CPLEX** → **MOSEK** → scipy multistart
-- CLI default solver: `--joint-opt-solver cplex`
+- CLI default solver: `--joint-opt-solver gurobi`
 - `prefer_gurobi = True` when any of gurobi/cplex/mosek is selected (triggers the chain)
 
 ## Solver Notes
 
 ### Gurobi
-- License **expired 2026-01-19**; renewal requires academic IP (not available from China)
-- Renewal process: gurobi.com/aca_china (needs in-campus network)
+- License **renewed 2026-03-27**, valid until **2027-03-27** (academic, version 12.0.1)
 - Uses `NonConvex=2` parameter for indefinite QP
+- **Currently the preferred/default solver** — use `--joint-opt-solver gurobi`
 
 ### CPLEX
 - `optimalitytarget = optimal_global` converts to MIQP for global solution
 - Status codes 101/102 = optimal
-- **Currently the working default solver**
+- Fallback if Gurobi unavailable
 
 ### MOSEK
 - License at `~/mosek/mosek.lic` (valid until 2027-03-26, version 11)
