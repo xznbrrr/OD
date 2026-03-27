@@ -46,21 +46,27 @@ All three models fit the outcome (ROA or Tobin's Q) as a function of the 6 strat
 ### Model 1 — Individual (Single-Variable)
 Fit a separate quadratic for each dimension independently:
 
-$$y \sim \alpha + \beta_1 x_k + \beta_2 x_k^2 + \varepsilon \quad \text{for each } k$$
+```
+y = α + β₁·xₖ + β₂·xₖ²  +  ε     (for each k = 1…6 separately)
+```
 
 Optimize each dimension independently; combine the 6 per-dimension optima into one joint strategy vector.
 
 ### Model 2 — Additive
 One joint regression with linear and squared terms, no cross terms:
 
-$$y \sim \alpha + \sum_k \beta_k x_k + \sum_k \gamma_k x_k^2 + \varepsilon$$
+```
+y = α + Σₖ(βₖ·xₖ + γₖ·xₖ²)  +  ε
+```
 
 Optimized jointly (separable across dimensions).
 
 ### Model 3 — Full Quadratic
 All linear, squared, and pairwise cross terms:
 
-$$y \sim \alpha + \sum_k \beta_k x_k + \sum_k \gamma_k x_k^2 + \sum_{i < j} \delta_{ij} x_i x_j + \varepsilon$$
+```
+y = α + Σₖ(βₖ·xₖ + γₖ·xₖ²) + Σᵢ﹤ⱼ δᵢⱼ·xᵢ·xⱼ  +  ε
+```
 
 Optimized jointly via a box-constrained QP (potentially non-convex due to cross terms — requires Gurobi/CPLEX).
 
@@ -69,7 +75,10 @@ The **full quadratic model is the benchmark** — the best estimated surface.
 For empirical results, gaps are relative to the full model's estimated optimum.
 For simulation, gaps are relative to the *true* noiseless optimum.
 
-$$\text{gap} = f^*_{\text{M3}} - f(x^*_{\text{model}}) \qquad \%\text{gap} = \frac{\text{gap}}{|f^*_{\text{M3}}|} \times 100$$
+```
+gap   = f*(M3) - f(x*_model)
+% gap = gap / |f*(M3)| × 100
+```
 
 ---
 
