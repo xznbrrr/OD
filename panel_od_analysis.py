@@ -863,9 +863,12 @@ def run_panel_od_analysis(
     output_dir: Path,
     outcomes: Optional[Sequence[str]] = None,
     joint_opt_solver: str = "scipy",
+    max_year: Optional[int] = None,
 ) -> Dict[str, Path]:
     outcomes = list(outcomes or DEFAULT_OUTCOMES)
     df = pd.read_csv(data_path)
+    if max_year is not None:
+        df = df[df["year"] <= max_year].copy()
     output_dir.mkdir(parents=True, exist_ok=True)
 
     created_paths = {}
@@ -905,6 +908,12 @@ def parse_args() -> argparse.Namespace:
         default="cplex",
         help="Solver used for additive and full-model joint optimum calculations.",
     )
+    parser.add_argument(
+        "--max-year",
+        type=int,
+        default=None,
+        help="Exclude observations with year > max_year (e.g. 2019 for pre-pandemic sample).",
+    )
     return parser.parse_args()
 
 
@@ -915,6 +924,7 @@ def main() -> None:
         args.output_dir,
         args.outcomes,
         joint_opt_solver=args.joint_opt_solver,
+        max_year=args.max_year,
     )
     for outcome, path in created_paths.items():
         print(f"{outcome}: {path}")

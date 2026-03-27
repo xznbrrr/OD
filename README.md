@@ -55,7 +55,7 @@ Optimize each dimension independently; combine the 6 per-dimension optima into o
 
 One joint regression with linear and squared terms, no cross terms:
 
-$$y = \alpha + \sum_{k=1}^{6} \left( \beta_k x_k + \gamma_k x_k^2 \right) + \varepsilon$$
+$$y = \alpha + \sum_{k=1}^{6} (\beta_k x_k + \gamma_k x_k^2) + \varepsilon$$
 
 Optimized jointly (separable across dimensions).
 
@@ -63,7 +63,7 @@ Optimized jointly (separable across dimensions).
 
 All linear, squared, and pairwise cross terms:
 
-$$y = \alpha + \sum_{k=1}^{6} \left( \beta_k x_k + \gamma_k x_k^2 \right) + \sum_{i < j} \delta_{ij}\, x_i x_j + \varepsilon$$
+$$y = \alpha + \sum_{k=1}^{6} (\beta_k x_k + \gamma_k x_k^2) + \sum_{i < j} \delta_{ij} x_i x_j + \varepsilon$$
 
 Optimized jointly via a box-constrained QP (potentially non-convex due to cross terms — requires Gurobi/CPLEX).
 
@@ -73,9 +73,9 @@ The **full quadratic model is the benchmark** — the best estimated surface.
 For empirical results, gaps are relative to the full model's estimated optimum.
 For simulation, gaps are relative to the *true* noiseless optimum.
 
-$$\text{gap} = f^{\ast}_{M3} - f\!\left(x^{\ast}_{\text{model}}\right)$$
+$$\text{gap} = f^{*}_{M3} - f(x^{*}_{\text{model}})$$
 
-$$\text{gap}_{\%} = \frac{\text{gap}}{\left| f^{\ast}_{M3} \right|} \times 100$$
+$$\text{gap}_{\text{pct}} = \frac{\text{gap}}{|f^{*}_{M3}|} \times 100$$
 
 ---
 
@@ -169,7 +169,7 @@ To tune the difficulty of the estimation problem:
 
 The noiseless revenue function has the form:
 
-$$f(x) = c + \mathbf{a}^\top x + x^\top B x$$
+$$f(x) = c + a^{\top} x + x^{\top} B x$$
 
 where:
 - $c$ = `TRUE_INTERCEPT` (shifts baseline revenue above zero)
