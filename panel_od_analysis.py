@@ -16,13 +16,21 @@ from OD import QuadraticODAnalyzer
 
 
 CORE_VARS = [
-    "rnd_intensity",
-    "capital_intensity",
-    "leverage",
-    "adv_intensity",
-    "div_policy",
-    "unsystematic_risk",
+    "x_rnd",
+    "x_capint",
+    "x_lev",
+    "x_adv",
+    "x_div",
+    "x_risk",
 ]
+CORE_VAR_LABELS = {
+    "x_rnd": "R&D nonconformity",
+    "x_capint": "Capital intensity nonconformity",
+    "x_lev": "Leverage nonconformity",
+    "x_adv": "Advertising nonconformity",
+    "x_div": "Dividend nonconformity",
+    "x_risk": "Unsystematic risk nonconformity",
+}
 CONTROL_VARS = [
     "firm_size",
     "firm_age",
@@ -485,6 +493,58 @@ def _save_matrix(df: pd.DataFrame, path: Path) -> None:
     df.to_csv(path)
 
 
+def _conformity_index_analysis(
+    df: pd.DataFrame,
+    outcome: str,
+) -> Optional[Tuple[pd.DataFrame, pd.DataFrame]]:
+    """Quadratic FE regression of outcome on conformity_index (Miller 2013 aggregate)."""
+    if "conformity_index" not in df.columns:
+        return None
+    required = ["gvkey", "year", outcome, "conformity_index"]
+    sub = df[[c for c in required if c in df.columns]].dropna().copy()
+    sub = _create_lagged_columns(sub, "gvkey", ["conformity_index"])
+    sub = sub.dropna(subset=[outcome, "lag_conformity_index"]).copy()
+    if len(sub) < 50:
+        return None
+    sub[outcome] = winsorize_series(sub[outcome])
+    sub["lag_conformity_index"] = winsorize_series(sub["lag_conformity_index"])
+    sub["lag_conformity_index_sq"] = sub["lag_conformity_index"] ** 2
+    regressors = ["lag_conformity_index", "lag_conformity_index_sq"]
+    result = _fit_absorbed_ols(
+        sub,
+        outcome=outcome,
+        regressors=regressors,
+        absorb_cols=["gvkey", "year"],
+        cluster_mode="two_way",
+        model_name="conformity_quadratic",
+        spec_name="main",
+    )
+    beta1 = result.params.get("lag_conformity_index", np.nan)
+    beta2 = result.params.get("lag_conformity_index_sq", np.nan)
+    bounds = (float(sub["lag_conformity_index"].min()), float(sub["lag_conformity_index"].max()))
+    x_star, val_star, hit_bound = solve_1d_quadratic_optimum(beta1, beta2, bounds)
+    coef_map = result.coefficient_table.set_index("term")
+    summary_row = {
+        "outcome": outcome,
+        "variable": "conformity_index",
+        "n_obs": result.n_obs,
+        "n_firms": int(sub["gvkey"].nunique()),
+        "n_years": int(sub["year"].nunique()),
+        "r2_within": result.r2_within,
+        "cluster_mode_used": result.cluster_mode_used,
+        "coef_linear": beta1,
+        "se_linear": coef_map.loc["lag_conformity_index", "std_error"] if "lag_conformity_index" in coef_map.index else np.nan,
+        "p_linear": coef_map.loc["lag_conformity_index", "p_value"] if "lag_conformity_index" in coef_map.index else np.nan,
+        "coef_quadratic": beta2,
+        "se_quadratic": coef_map.loc["lag_conformity_index_sq", "std_error"] if "lag_conformity_index_sq" in coef_map.index else np.nan,
+        "p_quadratic": coef_map.loc["lag_conformity_index_sq", "p_value"] if "lag_conformity_index_sq" in coef_map.index else np.nan,
+        "optimal_x": x_star,
+        "optimal_surface_value": val_star,
+        "optimal_hits_bound": hit_bound,
+    }
+    return pd.DataFrame([summary_row]), result.coefficient_table
+
+
 def run_outcome_analysis(
     df: pd.DataFrame,
     outcome: str,
@@ -773,6 +833,12 @@ def run_outcome_analysis(
     _save_dataframe(pd.DataFrame([full_cross_wald]), outcome_dir / "full_main_cross_terms_wald.csv")
     _save_dataframe(optimal_comparison, outcome_dir / "optimal_comparison.csv")
     _save_dataframe(pd.DataFrame(robustness_rows), outcome_dir / "robustness_summary.csv")
+
+    conf_result = _conformity_index_analysis(df, outcome)
+    if conf_result is not None:
+        conf_summary, conf_coefs = conf_result
+        _save_dataframe(conf_summary, outcome_dir / "conformity_index_main.csv")
+        _save_dataframe(conf_coefs, outcome_dir / "conformity_index_coefficients.csv")
 
     if all(additive_hit_bounds):
         extra_warning_rows.append(

@@ -6,236 +6,294 @@
 
 ---
 
-## Table 1. Sample Summary
+## Variable Definitions (Miller 2013)
 
-The sample covers Fortune 1000 firms from 1963 to 2019. The six strategy variables are lagged one period, winsorized at the 1st and 99th percentiles within each outcome-specific sample, and entered in quadratic form. All regressions absorb firm and year fixed effects via alternating projections and report two-way clustered covariance matrices.
+Following Miller (2013), the six strategy variables measure **nonconformity** — each is the number of standard deviations by which a firm's strategy departs from its 3-digit SIC industry median. Positive values indicate above-median strategy intensity; negative values indicate below-median. Formally:
 
-| Outcome   | Firm-years | Firms | Years | Winsorized |
-|-----------|------------|-------|-------|------------|
-| ROA       | 24,112     | 1,311 | 57    | Yes        |
-| Tobin's Q | 21,518     | 1,173 | 57    | Yes        |
+$$x_{ikt} = \frac{\text{(firm } i \text{'s strategy on dimension } k \text{ in year } t) - \text{(industry median)}_{kt}}{\text{(industry SD)}_{kt}}$$
+
+| Variable | Numerator |
+|----------|-----------|
+| R&D nonconformity (`x_rnd`) | R&D expenditure / sales |
+| Capital intensity (`x_capint`) | Net PPE / sales |
+| Leverage (`x_lev`) | Long-term debt / total assets |
+| Advertising (`x_adv`) | Advertising expenditure / sales |
+| Dividend policy (`x_div`) | Dividends / earnings |
+| Unsystematic risk (`x_risk`) | Residual variance of daily stock returns |
+
+A firm with $x_{ikt} = 0$ exactly conforms to its industry median on dimension $k$; $x_{ikt} > 0$ means above-median nonconformity in the direction of greater intensity.
+
+The **conformity index** aggregates all six dimensions:
+
+$$\text{Conformity index} = 1 - \sum_{k=1}^{6} z_{|x_{ikt}|}$$
+
+where $z_{|x_{ikt}|}$ is the standardized absolute deviation on dimension $k$. Higher values indicate greater overall strategic conformity to industry norms.
 
 ---
 
-## Table 2. Pairwise Pearson Correlations Among Lagged Strategy Variables
+## Table 1. Sample Summary
+
+The sample covers Fortune 1000 firms from 1963 to 2019. The six nonconformity variables are lagged one period, winsorized at the 1st and 99th percentiles within each outcome-specific sample, and entered in quadratic form. All regressions absorb firm and year fixed effects via alternating projections and report two-way clustered covariance matrices (firm × year).
+
+| Outcome   | Firm-years | Firms | Years | Winsorized |
+|-----------|------------|-------|-------|------------|
+| ROA       | 15,747     | 1,011 | 55    | Yes        |
+| Tobin's Q | 15,062     |   956 | 55    | Yes        |
+
+*Notes:* Observations are fewer than when using raw ratios because the standardized deviation variables (`x_*`) require a within-industry standard deviation to be computable, reducing coverage in years or industries with few firms.
+
+---
+
+## Table 2. Pairwise Pearson Correlations Among Lagged Nonconformity Variables
 
 ### Panel A. ROA sample
 
 |             | R&D    | Capital | Leverage | Advertising | Dividend | Risk   |
 |-------------|--------|---------|----------|-------------|----------|--------|
-| R&D         |  1.000 | −0.178  | −0.237   |  0.048      | −0.069   |  0.162 |
-| Capital     | −0.178 |  1.000  |  0.230   | −0.178      |  0.034   | −0.103 |
-| Leverage    | −0.237 |  0.230  |  1.000   | −0.065      |  0.155   | −0.012 |
-| Advertising |  0.048 | −0.178  | −0.065   |  1.000      |  0.131   |  0.021 |
-| Dividend    | −0.069 |  0.034  |  0.155   |  0.131      |  1.000   | −0.280 |
-| Risk        |  0.162 | −0.103  | −0.012   |  0.021      | −0.280   |  1.000 |
+| R&D         |  1.000 |  −0.012 |  −0.167  |   0.099     |  −0.029  |  0.035 |
+| Capital     | −0.012 |   1.000 |   0.205  |  −0.095     |   0.023  | −0.057 |
+| Leverage    | −0.167 |   0.205 |   1.000  |  −0.053     |  −0.021  |  0.044 |
+| Advertising |  0.099 |  −0.095 |  −0.053  |   1.000     |   0.078  |  0.020 |
+| Dividend    | −0.029 |   0.023 |  −0.021  |   0.078     |   1.000  | −0.348 |
+| Risk        |  0.035 |  −0.057 |   0.044  |   0.020     |  −0.348  |  1.000 |
 
 ### Panel B. Tobin's Q sample
 
 |             | R&D    | Capital | Leverage | Advertising | Dividend | Risk   |
 |-------------|--------|---------|----------|-------------|----------|--------|
-| R&D         |  1.000 | −0.210  | −0.231   |  0.036      | −0.081   |  0.169 |
-| Capital     | −0.210 |  1.000  |  0.307   | −0.202      |  0.021   | −0.122 |
-| Leverage    | −0.231 |  0.307  |  1.000   | −0.047      |  0.191   | −0.012 |
-| Advertising |  0.036 | −0.202  | −0.047   |  1.000      |  0.128   |  0.014 |
-| Dividend    | −0.081 |  0.021  |  0.191   |  0.128      |  1.000   | −0.296 |
-| Risk        |  0.169 | −0.122  | −0.012   |  0.014      | −0.296   |  1.000 |
+| R&D         |  1.000 |  −0.019 |  −0.169  |   0.092     |  −0.028  |  0.034 |
+| Capital     | −0.019 |   1.000 |   0.224  |  −0.112     |   0.019  | −0.062 |
+| Leverage    | −0.169 |   0.224 |   1.000  |  −0.057     |  −0.008  |  0.057 |
+| Advertising |  0.092 |  −0.112 |  −0.057  |   1.000     |   0.081  |  0.023 |
+| Dividend    | −0.028 |   0.019 |  −0.008  |   0.081     |   1.000  | −0.359 |
+| Risk        |  0.034 |  −0.062 |   0.057  |   0.023     |  −0.359  |  1.000 |
 
-*Notes:* Correlations are moderate throughout; the largest absolute correlation is 0.307 (Capital × Leverage in the Tobin's Q sample). The Dividend–Risk pair is the most consistently negative across both samples (−0.280 and −0.296).
+*Notes:* All correlations are modest. The strongest pair is Dividend–Risk (−0.348 ROA, −0.359 Tobin's Q), meaning firms that conform more in dividend policy tend to deviate more in unsystematic risk. Leverage–Capital is the next strongest (0.205–0.224).
 
 ---
 
 ## Table 3. Single-Variable Quadratic Fixed-Effects Models
 
-Each row is a separate firm- and year-fixed-effects regression of the outcome on one lagged strategy variable and its square. Standard errors are two-way clustered by firm and year. The one-dimensional optimum is computed over the observed support of the winsorized variable.
+Each row is a separate firm- and year-fixed-effects regression of the outcome on one lagged nonconformity variable and its square. Standard errors are two-way clustered by firm and year. The one-dimensional optimum is found over the observed (winsorized) support of each variable.
 
-### Panel A. ROA (N = 24,112)
+### Panel A. ROA (N = 15,747)
 
-| Variable            | Linear coef. | SE     | p-value  | Quad. coef. | SE      | p-value  | 1D Opt. | Bound? | Within-R² |
-|---------------------|--------------|--------|----------|-------------|---------|----------|---------|--------|-----------|
-| R&D intensity       | −0.526       | 0.176  | 0.004    |  0.469      | 0.644   | 0.470    | 0.000   | Yes    | 0.014     |
-| Capital intensity   | −0.045       | 0.008  | < 0.001  |  0.005      | 0.002   | 0.012    | 0.015   | Yes    | 0.023     |
-| Leverage            | −0.184       | 0.017  | < 0.001  |  0.151      | 0.015   | < 0.001  | 0.000   | Yes    | 0.044     |
-| Advertising intensity | −0.319     | 0.143  | 0.029    |  2.380      | 1.105   | 0.036    | 0.147   | Yes    | 0.002     |
-| Dividend policy     |  0.297       | 0.067  | < 0.001  | −0.370      | 0.172   | 0.036    | 0.391   | No     | 0.024     |
-| Unsystematic risk   | −1.034       | 0.522  | 0.053    | −5.138      | 10.041  | 0.611    | 0.007   | Yes    | 0.014     |
+| Variable            | Linear coef. | SE     | p-value  | Quad. coef.  | SE     | p-value  | 1D Opt. (SDs) | Bound? | Within-R² |
+|---------------------|--------------|--------|----------|--------------|--------|----------|---------------|--------|-----------|
+| R&D                 |  0.0003      | 0.0021 | 0.878    | −0.0001      | 0.0009 | 0.919    |  1.708        | No     | 0.000     |
+| Capital intensity   | −0.0051      | 0.0018 | 0.007    | −0.0038      | 0.0008 | < 0.001  | −0.675        | No     | 0.017     |
+| Leverage            | −0.0151      | 0.0017 | < 0.001  |  0.0053      | 0.0009 | < 0.001  | −1.859        | Yes    | 0.036     |
+| Advertising         | −0.0065      | 0.0020 | 0.002    |  0.0003      | 0.0007 | 0.657    | −1.341        | Yes    | 0.005     |
+| Dividend            |  0.0059      | 0.0016 | < 0.001  |  0.0025      | 0.0008 | 0.003    |  3.567        | Yes    | 0.019     |
+| Unsystematic risk   | −0.0058      | 0.0011 | < 0.001  | −0.0008      | 0.0005 | 0.107    | −1.664        | Yes    | 0.009     |
 
-### Panel B. Tobin's Q (N = 21,518)
+### Panel B. Tobin's Q (N = 15,062)
 
-| Variable            | Linear coef. | SE     | p-value  | Quad. coef.  | SE       | p-value  | 1D Opt. | Bound? | Within-R² |
-|---------------------|--------------|--------|----------|--------------|----------|----------|---------|--------|-----------|
-| R&D intensity       |  −3.121      | 2.743  | 0.260    |    1.579     |   9.956  | 0.875    | 0.000   | Yes    | 0.004     |
-| Capital intensity   |  −0.342      | 0.102  | 0.001    |    0.078     |   0.024  | 0.002    | 0.028   | Yes    | 0.003     |
-| Leverage            |  −2.216      | 0.255  | < 0.001  |    2.085     |   0.223  | < 0.001  | 1.117   | Yes    | 0.034     |
-| Advertising intensity | −6.070     | 2.268  | 0.010    |   40.665     |  18.290  | 0.030    | 0.150   | Yes    | 0.003     |
-| Dividend policy     |   2.866      | 0.860  | 0.002    |   −0.964     |   2.101  | 0.648    | 0.419   | No     | 0.028     |
-| Unsystematic risk   | −33.198      | 9.180  | 0.001    |  498.609     | 182.374  | 0.008    | 0.007   | Yes    | 0.006     |
+| Variable            | Linear coef. | SE     | p-value  | Quad. coef.  | SE     | p-value  | 1D Opt. (SDs) | Bound? | Within-R² |
+|---------------------|--------------|--------|----------|--------------|--------|----------|---------------|--------|-----------|
+| R&D                 |  0.0373      | 0.0335 | 0.268    |  0.0077      | 0.0130 | 0.556    |  3.836        | Yes    | 0.002     |
+| Capital intensity   | −0.0404      | 0.0266 | 0.134    | −0.0225      | 0.0109 | 0.042    | −0.898        | No     | 0.004     |
+| Leverage            | −0.1522      | 0.0232 | < 0.001  |  0.0728      | 0.0130 | < 0.001  | −1.849        | Yes    | 0.021     |
+| Advertising         | −0.0739      | 0.0359 | 0.044    | −0.0144      | 0.0159 | 0.369    | −1.350        | Yes    | 0.009     |
+| Dividend            |  0.0002      | 0.0219 | 0.994    |  0.0425      | 0.0148 | 0.006    |  3.526        | Yes    | 0.008     |
+| Unsystematic risk   | −0.0531      | 0.0209 | 0.015    | −0.0063      | 0.0073 | 0.393    | −1.671        | Yes    | 0.003     |
 
-*Notes:* Dividend policy is the only variable with an interior optimum in the ROA sample (0.391). All other univariate optima hit a boundary of the observed support. The within-R² values are modest (0.2–4.4%), consistent with the multi-dimensional nature of strategy.
+*Notes:* Optima are expressed in units of standard deviations from the industry median. Boundary optima occur when the estimated parabola has its vertex outside the observed support (the optimum is censored at the support boundary). Capital intensity is the only variable with a clearly interior optimum for both outcomes (−0.675 SDs for ROA, −0.898 SDs for Tobin's Q), suggesting modest below-median capital intensity is optimal when considered in isolation.
 
 ---
 
 ## Table 4. Additive Quadratic Fixed-Effects Model
 
-Joint regression with linear and squared terms for all six variables; no cross terms. Variables are centered before constructing quadratic terms to reduce mechanical collinearity; coefficients are reported on the centered scale.
+Joint regression with linear and squared terms for all six variables; no cross terms. Variables are centered at their sample means before constructing quadratic terms; coefficients are on the centered scale. The within-R² rises to 7.6% (ROA) and 4.4% (Tobin's Q).
 
-| Term                   | ROA coef. | ROA SE  | ROA p    | Tobin's Q coef. | Tobin's Q SE | Tobin's Q p |
-|------------------------|-----------|---------|----------|-----------------|--------------|-------------|
-| R&D intensity          | −0.397    | 0.120   | 0.002    | −2.462          | 2.131        | 0.253       |
-| Capital intensity      | −0.024    | 0.006   | < 0.001  | −0.086          | 0.067        | 0.202       |
-| Leverage               | −0.066    | 0.007   | < 0.001  | −0.749          | 0.124        | < 0.001     |
-| Advertising intensity  | −0.125    | 0.094   | 0.188    | −4.168          | 1.694        | 0.017       |
-| Dividend policy        |  0.259    | 0.043   | < 0.001  |  3.334          | 0.576        | < 0.001     |
-| Unsystematic risk      | −0.784    | 0.213   | 0.001    | −12.063         | 3.916        | 0.003       |
-| R&D intensity²         |  0.171    | 0.527   | 0.747    |   0.601         | 9.273        | 0.949       |
-| Capital intensity²     |  0.002    | 0.002   | 0.255    |   0.044         | 0.022        | 0.049       |
-| Leverage²              |  0.159    | 0.014   | < 0.001  |   2.199         | 0.210        | < 0.001     |
-| Advertising intensity² |  1.445    | 0.907   | 0.117    |  35.322         | 16.959       | 0.042       |
-| Dividend policy²       | −0.355    | 0.143   | 0.016    |  −2.703         | 1.821        | 0.143       |
-| Unsystematic risk²     | −15.322   | 9.615   | 0.117    | 303.391         | 170.871      | 0.081       |
-| **Joint Wald (all 12)**| **χ²(12) = 387.3** | | **< 0.001** | **χ²(12) = 186.8** | | **< 0.001** |
+| Term                      | ROA coef. | ROA SE  | ROA p    | Tobin's Q coef. | Tobin's Q SE | Tobin's Q p |
+|---------------------------|-----------|---------|----------|-----------------|--------------|-------------|
+| R&D                       | −0.0006   | 0.0021  | 0.762    |   0.0319        | 0.0338       | 0.349       |
+| Capital intensity         | −0.0056   | 0.0018  | 0.003    |  −0.0444        | 0.0286       | 0.126       |
+| Leverage                  | −0.0126   | 0.0017  | < 0.001  |  −0.1279        | 0.0239       | < 0.001     |
+| Advertising               | −0.0065   | 0.0021  | 0.003    |  −0.0911        | 0.0361       | 0.015       |
+| Dividend                  |  0.0047   | 0.0017  | 0.007    |   0.0014        | 0.0219       | 0.951       |
+| Unsystematic risk         | −0.0045   | 0.0011  | < 0.001  |  −0.0510        | 0.0205       | 0.016       |
+| R&D²                      | −0.0003   | 0.0008  | 0.701    |   0.0038        | 0.0143       | 0.790       |
+| Capital intensity²        | −0.0036   | 0.0008  | < 0.001  |  −0.0196        | 0.0127       | 0.128       |
+| Leverage²                 |  0.0048   | 0.0009  | < 0.001  |   0.0647        | 0.0132       | < 0.001     |
+| Advertising²              |  0.0003   | 0.0008  | 0.674    |  −0.0115        | 0.0172       | 0.506       |
+| Dividend²                 |  0.0030   | 0.0009  | 0.002    |   0.0437        | 0.0145       | 0.004       |
+| Unsystematic risk²        | −0.0008   | 0.0005  | 0.136    |  −0.0080        | 0.0086       | 0.356       |
+| **Joint Wald (all 12)**   | **χ²(12) = 210.2** | | **< 0.001** | **χ²(12) = 73.1** | | **< 0.001** |
+| **Within-R²**             | **0.076** |         |          | **0.044**        |              |             |
 
-*Notes:* Leverage is the dominant positive-quadratic term in both outcomes (leverage² > 0), consistent with a U-shaped relationship between debt and performance. Dividend policy enters positively and concavely (dividend policy² < 0) for ROA, suggesting a concave return to payout generosity.
+*Notes:* Leverage exerts a consistently negative linear effect on both outcomes and a positive quadratic effect (Leverage² > 0), suggesting a U-shaped performance profile with the trough well within the observed support. Dividend policy enters positively and convexly for ROA (Dividend² > 0), consistent with higher dividends signaling financial health.
 
 ---
 
 ## Table 5. Full Quadratic Fixed-Effects Model: Selected Coefficients and Joint Tests
 
-Extends the additive model with all 15 pairwise cross terms. Only terms significant at the 10% level in at least one outcome are shown in the main panel; the joint Wald tests cover all terms.
+Extends the additive model with all 15 pairwise cross terms. Within-R² rises to 8.8% (ROA) and 5.7% (Tobin's Q), a gain of 1.2 pp and 1.3 pp over the additive model.
 
 ### Panel A. Main-effect and squared terms
 
-| Term                   | ROA coef. | ROA p    | Tobin's Q coef. | Tobin's Q p |
-|------------------------|-----------|----------|-----------------|-------------|
-| R&D intensity          | −0.392    | 0.001    |  −2.583         | 0.207       |
-| Capital intensity      | −0.021    | 0.001    |  −0.095         | 0.282       |
-| Leverage               | −0.067    | < 0.001  |  −0.689         | < 0.001     |
-| Advertising intensity  | −0.104    | 0.248    |  −4.454         | 0.016       |
-| Dividend policy        |  0.279    | < 0.001  |   3.780         | < 0.001     |
-| Unsystematic risk      | −0.742    | 0.001    |  −8.603         | 0.024       |
-| Leverage²              |  0.155    | < 0.001  |   2.242         | < 0.001     |
-| Advertising intensity² |  1.945    | 0.029    |  42.993         | 0.011       |
-| Unsystematic risk²     | −25.296   | 0.009    | −37.397         | 0.837       |
+| Term                      | ROA coef.  | ROA p    | Tobin's Q coef. | Tobin's Q p |
+|---------------------------|------------|----------|-----------------|-------------|
+| R&D                       | −0.0012    | 0.581    |   0.0250        | 0.455       |
+| Capital intensity         | −0.0056    | 0.003    |  −0.0474        | 0.099       |
+| Leverage                  | −0.0118    | < 0.001  |  −0.1195        | < 0.001     |
+| Advertising               | −0.0064    | 0.003    |  −0.0855        | 0.021       |
+| Dividend                  |  0.0061    | < 0.001  |   0.0104        | 0.661       |
+| Unsystematic risk         | −0.0046    | < 0.001  |  −0.0551        | 0.009       |
+| R&D²                      |  0.0002    | 0.763    |   0.0094        | 0.492       |
+| Capital intensity²        | −0.0033    | < 0.001  |  −0.0217        | 0.101       |
+| Leverage²                 |  0.0047    | < 0.001  |   0.0554        | < 0.001     |
+| Advertising²              |  0.0007    | 0.393    |  −0.0018        | 0.910       |
+| Dividend²                 |  0.0032    | < 0.001  |   0.0506        | < 0.001     |
+| Unsystematic risk²        | −0.0008    | 0.170    |  −0.0091        | 0.351       |
 
 ### Panel B. Selected cross terms (significant at 10% in at least one outcome)
 
 | Cross term                          | ROA coef. | ROA p    | Tobin's Q coef. | Tobin's Q p |
 |-------------------------------------|-----------|----------|-----------------|-------------|
-| R&D × Unsystematic risk             | −3.290    | 0.197    | 102.181         | 0.059       |
-| Capital intensity × Leverage        |  0.013    | 0.160    |   0.146         | 0.203       |
-| Capital intensity × Dividend policy |  0.039    | 0.100    |   0.186         | 0.604       |
-| Leverage × Advertising intensity    |  0.484    | 0.007    |   7.791         | 0.030       |
-| Leverage × Dividend policy          | −0.469    | < 0.001  |  −6.018         | < 0.001     |
-| Leverage × Unsystematic risk        | −0.389    | 0.393    | −32.551         | < 0.001     |
-| Advertising × Dividend policy       |  0.623    | 0.262    |  19.617         | 0.021       |
-| Dividend policy × Unsystematic risk | −5.429    | 0.001    | −107.203        | < 0.001     |
+| R&D × Advertising                   | −0.0025   | 0.018    |  −0.0523        | 0.030       |
+| R&D × Unsystematic risk             | −0.0020   | 0.035    |  −0.0003        | 0.984       |
+| Capital intensity × Leverage        | −0.0003   | 0.778    |   0.0340        | 0.042       |
+| Capital intensity × Unsystematic risk| −0.0007  | 0.470    |  −0.0271        | 0.053       |
+| Leverage × Dividend                 | −0.0051   | < 0.001  |  −0.0449        | 0.006       |
+| Leverage × Unsystematic risk        | −0.0019   | 0.053    |   0.0142        | 0.290       |
+| Advertising × Dividend              | −0.0016   | 0.120    |  −0.0608        | 0.003       |
 
 ### Panel C. Joint Wald tests
 
-|                              | ROA               | Tobin's Q         |
-|------------------------------|-------------------|-------------------|
-| All 27 terms, χ²(27)         | 504.7, p < 0.001  | 309.2, p < 0.001  |
-| Cross terms only, χ²(15)     |  61.2, p < 0.001  |  99.9, p < 0.001  |
-| Within-R² (full model)       | 0.128             | 0.111             |
-| Within-R² (additive model)   | 0.110             | 0.077             |
+|                                | ROA                | Tobin's Q          |
+|--------------------------------|--------------------|--------------------|
+| All 27 terms, χ²(27)           | 306.7, p < 0.001   | 130.2, p < 0.001   |
+| Cross terms only, χ²(15)       |  56.0, p < 0.001   |  37.5, p = 0.001   |
+| Within-R² (full model)         | 0.088              | 0.057              |
+| Within-R² (additive model)     | 0.076              | 0.044              |
 
-*Notes:* The 15 cross terms are jointly highly significant in both outcomes (p < 0.001), with the cross-term block contributing 1.8 pp to within-R² for ROA and 3.4 pp for Tobin's Q. Two interactions dominate across outcomes: **Leverage × Dividend policy** is consistently negative and precisely estimated, while **Dividend policy × Unsystematic risk** is strongly negative in both samples, suggesting that high-dividend strategies are particularly costly for volatile firms.
+*Notes:* The 15 cross terms are jointly significant in both outcomes. The dominant interaction is **Leverage × Dividend** (negative in both), meaning firms that deviate more from the industry norm on leverage should deviate less on dividends (and vice versa). **R&D × Advertising** is negative in both outcomes, suggesting that above-median R&D and above-median advertising nonconformity are substitutes rather than complements.
 
 ---
 
 ## Table 6. Constrained Optimal Strategy Positions
 
-The constrained optimum under each model is found via box-constrained QP (Gurobi, NonConvex=2), enforcing each variable to lie within its observed sample support after winsorization. Additive and full quadratic models are optimized jointly across all six dimensions.
+The constrained optimum under each model is found via box-constrained QP (Gurobi NonConvex=2), enforcing each variable to lie within its observed (winsorized) sample support. Values are in **standard deviations from the 3-digit SIC industry median**. Positive = above-median; negative = below-median.
 
 ### Panel A. ROA
 
-| Variable            | Support              | M1 Individual opt. | M2 Additive opt. | M3 Full opt. |
-|---------------------|----------------------|--------------------|------------------|--------------|
-| R&D intensity       | [0.000,  0.252]      | 0.000              | 0.000            | 0.000        |
-| Capital intensity   | [0.015,  3.718]      | 0.015              | 0.015            | 3.533        |
-| Leverage            | [0.000,  1.210]      | 0.000              | 0.000            | 0.000        |
-| Advertising intensity | [0.000, 0.147]     | 0.147              | 0.147            | 0.147        |
-| Dividend policy     | [−0.033, 0.494]      | 0.391              | 0.391            | 0.391        |
-| Unsystematic risk   | [0.007,  0.045]      | 0.007              | 0.007            | 0.007        |
-| **Estimated surface optimum** | —         | —                  | **0.1338**       | **0.2798**   |
+| Variable          | Support (SDs)        | M1 Individual opt. | M2 Additive opt. | M3 Full opt. |
+|-------------------|----------------------|--------------------|------------------|--------------|
+| R&D               | [−1.50,  3.81]       |  1.708             | −0.828           |  3.812       |
+| Capital intensity | [−1.64,  3.68]       | −0.675             | −0.572           | −1.199       |
+| Leverage          | [−1.86,  2.66]       | −1.859             | −1.859           | −1.859       |
+| Advertising       | [−1.34,  4.14]       | −1.341             | −1.341           | −1.341       |
+| Dividend          | [−1.72,  3.57]       |  3.567             |  3.567           |  3.567       |
+| Unsystematic risk | [−1.66,  2.94]       | −1.664             | −1.664           | −1.664       |
+| **Est. surface optimum** | —             | *(M3 value: 0.169)* | **0.142**      | **0.195**    |
 
 ### Panel B. Tobin's Q
 
-| Variable            | Support              | M1 Individual opt. | M2 Additive opt. | M3 Full opt. |
-|---------------------|----------------------|--------------------|------------------|--------------|
-| R&D intensity       | [0.000,  0.261]      | 0.000              | 0.000            | 0.000        |
-| Capital intensity   | [0.026,  3.792]      | 0.028              | 3.582            | 3.582        |
-| Leverage            | [0.000,  1.259]      | 1.117              | 1.117            | 0.000        |
-| Advertising intensity | [0.000, 0.151]     | 0.150              | 0.150            | 0.150        |
-| Dividend policy     | [−0.069, 0.553]      | 0.419              | 0.419            | 0.419        |
-| Unsystematic risk   | [0.007,  0.045]      | 0.007              | 0.007            | 0.007        |
-| **Estimated surface optimum** | —         | —                  | **1.9627**       | **4.8617**   |
+| Variable          | Support (SDs)        | M1 Individual opt. | M2 Additive opt. | M3 Full opt. |
+|-------------------|----------------------|--------------------|------------------|--------------|
+| R&D               | [−1.49,  3.84]       |  3.836             |  3.836           |  3.836       |
+| Capital intensity | [−1.65,  3.72]       | −0.899             | −0.899           | −1.646       |
+| Leverage          | [−1.85,  2.56]       | −1.849             | −1.849           | −1.849       |
+| Advertising       | [−1.35,  4.19]       | −1.350             | −1.350           | −1.350       |
+| Dividend          | [−1.71,  3.53]       |  3.526             |  3.526           |  3.526       |
+| Unsystematic risk | [−1.67,  2.93]       | −1.671             | −1.671           |  1.616       |
+| **Est. surface optimum** | —             | *(M3 value: 2.717)* | **2.717**      | **2.946**    |
 
-*Notes:* The estimated surface optimum for M1 is not directly comparable to M2 and M3 because M1 optimizes six separate univariate surfaces rather than a joint surface. For M3, the large jump in Tobin's Q from 1.96 (M2) to 4.86 (M3) reflects the impact of cross-term interactions — in particular, the full model recommends zero leverage (vs. 1.117 under M2), exploiting the negative Leverage × Dividend policy and Leverage × Unsystematic risk interactions.
+*Notes:* The optimal strategy prescription, interpreted in terms of industry positioning: firms should be **substantially below the industry median on leverage** (approximately 1.85 SDs below), **far above the industry median on dividends** (~3.5 SDs above), and **below industry median on advertising and unsystematic risk**. The full model additionally prescribes extreme above-median R&D nonconformity for Tobin's Q, and flips unsystematic risk from below- to above-median — a reversal attributable to cross-term interactions with other dimensions.
 
 ---
 
 ## Table 7. Optimality Gap Analysis
 
-The full quadratic model (M3) serves as the benchmark — its estimated surface is the best available approximation of the true performance function. The optimality gap measures how much the full-model estimated surface value is lost when a simpler model's optimal strategy is used instead.
+The full quadratic model (M3) serves as the benchmark. The optimality gap measures how much of the achievable estimated performance is lost when a simpler model's optimal strategy is adopted instead.
 
-$$\text{gap} = f^{*}_{M3} - f(x^{*}_{\text{model}}) \qquad \text{gap}_{\text{pct}} = \frac{\text{gap}}{f^{*}_{M3}} \times 100$$
+$$\text{gap} = f^{*}_{M3} - f(x^{*}_{\text{model}}) \qquad \text{gap}_{\text{pct}} = \frac{\text{gap}}{|f^{*}_{M3}|} \times 100$$
 
-| Outcome   | Model              | Full surface value at model's $x^*$ | Abs. Gap | % Gap  |
-|-----------|--------------------|-------------------------------------|----------|--------|
-| ROA       | M3 Full Quadratic  | 0.2798 *(benchmark)*                | —        | —      |
-| ROA       | M2 Additive        | 0.2551                              | 0.0248   | 8.85%  |
-| ROA       | M1 Individual      | 0.2551                              | 0.0248   | 8.85%  |
-| Tobin's Q | M3 Full Quadratic  | 4.8617 *(benchmark)*                | —        | —      |
-| Tobin's Q | M2 Additive        | 4.6389                              | 0.2228   | 4.58%  |
-| Tobin's Q | M1 Individual      | 3.3629                              | 1.4988   | 30.83% |
+| Outcome   | Model              | Full surface value at model's $x^*$ | Abs. Gap | % Gap   |
+|-----------|--------------------|-------------------------------------|----------|---------|
+| ROA       | M3 Full Quadratic  | 0.1951 *(benchmark)*                | —        | —       |
+| ROA       | M2 Additive        | 0.1417                              | 0.0534   | 27.4%   |
+| ROA       | M1 Individual      | 0.1688                              | 0.0263   | 13.5%   |
+| Tobin's Q | M3 Full Quadratic  | 2.9461 *(benchmark)*                | —        | —       |
+| Tobin's Q | M2 Additive        | 2.7171                              | 0.2289   | 7.8%    |
+| Tobin's Q | M1 Individual      | 2.7169                              | 0.2292   | 7.8%    |
 
-*Notes:* For ROA, M1 and M2 happen to prescribe identical strategies (both hit the same corner solutions), so their gaps are equal. For Tobin's Q the divergence is more revealing: M2 loses 4.6% by ignoring cross-term interactions, but M1 loses 30.8% — nearly one-third of the achievable gain — because optimizing each dimension independently misses the joint structure. The full model's recommendation to set leverage to zero (exploiting the negative Leverage × Dividend policy and Leverage × Unsystematic risk interactions) is only discovered when cross terms are modeled explicitly.
+*Notes:* For ROA, the additive model (M2) loses 27.4% of achievable performance by ignoring cross-term interactions, while the individual model (M1) loses 13.5%. Notably, M1 is *better* than M2 here because M2's joint optimization pushes R&D to the lower boundary to exploit the negative R&D × Advertising cross term — a strategy that happens to backfire on the ROA surface. For Tobin's Q, M1 and M2 prescribe nearly identical strategies and show equal gaps of about 7.8%, because both independently arrive at the same corner solution for most dimensions.
 
 ---
 
 ## Table 8. Robustness Checks
 
-The joint significance of the additive and full-quadratic term blocks is checked across three alternative specifications: (i) firm clustering only, (ii) industry-year fixed effects replacing year FEs, and (iii) main specification augmented with firm size, age, market beta, and outcome-specific industry median controls.
+The joint significance of the additive and full-quadratic term blocks is checked across three alternative specifications: (i) firm clustering only, (ii) industry-year fixed effects replacing year FEs, and (iii) main specification augmented with firm-level controls.
 
 ### Panel A. ROA
 
-| Specification                          | Model     | Within-R² | Wald χ²  | p-value  |
-|----------------------------------------|-----------|-----------|----------|----------|
-| Main (firm + year FE, two-way cluster) | Additive  | 0.110     | 387.3    | < 0.001  |
-| Main (firm + year FE, two-way cluster) | Full      | 0.128     | 504.7†   | < 0.001  |
-| Firm clustering only                   | Additive  | 0.110     | 505.5    | < 0.001  |
-| Firm clustering only                   | Full      | 0.129     |  68.8†   | < 0.001  |
-| Industry-year FE, firm clustering      | Additive  | 0.113     | 482.7    | < 0.001  |
-| Industry-year FE, firm clustering      | Full      | 0.133     |  85.1†   | < 0.001  |
-| Main + controls                        | Additive  | 0.212     | 347.0    | < 0.001  |
-| Main + controls                        | Full      | 0.228     |  55.6†   | < 0.001  |
+| Specification                           | Model     | Within-R² | Wald χ²  | p-value  |
+|-----------------------------------------|-----------|-----------|----------|----------|
+| Main (firm + year FE, two-way cluster)  | Additive  | 0.076     | 210.2    | < 0.001  |
+| Main (firm + year FE, two-way cluster)  | Full      | 0.088     | 56.0†    | < 0.001  |
+| Firm clustering only                    | Additive  | 0.076     | 238.8    | < 0.001  |
+| Firm clustering only                    | Full      | 0.088     | 64.1†    | < 0.001  |
+| Industry-year FE, firm clustering       | Additive  | 0.086     | 307.1    | < 0.001  |
+| Industry-year FE, firm clustering       | Full      | 0.101     | 92.1†    | < 0.001  |
+| Main + controls                         | Additive  | 0.155     | 256.3    | < 0.001  |
+| Main + controls                         | Full      | 0.169     | 65.9†    | < 0.001  |
 
 ### Panel B. Tobin's Q
 
-| Specification                          | Model     | Within-R² | Wald χ²  | p-value  |
-|----------------------------------------|-----------|-----------|----------|----------|
-| Main (firm + year FE, two-way cluster) | Additive  | 0.077     | 186.8    | < 0.001  |
-| Main (firm + year FE, two-way cluster) | Full      | 0.111     | 309.2†   | < 0.001  |
-| Firm clustering only                   | Additive  | 0.077     | 211.7    | < 0.001  |
-| Firm clustering only                   | Full      | 0.111     | 118.3†   | < 0.001  |
-| Industry-year FE, firm clustering      | Additive  | 0.075     | 199.1    | < 0.001  |
-| Industry-year FE, firm clustering      | Full      | 0.102     |  86.1†   | < 0.001  |
-| Main + controls                        | Additive  | 0.217     | 166.4    | < 0.001  |
-| Main + controls                        | Full      | 0.237     |  71.8†   | < 0.001  |
+| Specification                           | Model     | Within-R² | Wald χ²  | p-value  |
+|-----------------------------------------|-----------|-----------|----------|----------|
+| Main (firm + year FE, two-way cluster)  | Additive  | 0.044     |  73.1    | < 0.001  |
+| Main (firm + year FE, two-way cluster)  | Full      | 0.057     |  37.5†   | 0.001    |
+| Firm clustering only                    | Additive  | 0.044     |  94.9    | < 0.001  |
+| Firm clustering only                    | Full      | 0.057     |  45.1†   | < 0.001  |
+| Industry-year FE, firm clustering       | Additive  | 0.050     | 132.0    | < 0.001  |
+| Industry-year FE, firm clustering       | Full      | 0.069     |  57.6†   | < 0.001  |
+| Main + controls                         | Additive  | 0.174     | 106.4    | < 0.001  |
+| Main + controls                         | Full      | 0.187     |  39.7†   | < 0.001  |
 
-*Notes:* † For full quadratic models, the Wald test covers the 15 cross terms only. For additive models it covers all 12 linear and quadratic terms. All results remain highly significant across every specification, confirming that both the additive quadratic structure and the cross-term interactions are robust to alternative clustering, fixed-effect, and control-variable choices.
+*Notes:* † For full quadratic models, the Wald statistic covers the 15 cross terms only. For additive models it covers all 12 linear and quadratic terms. Results are uniformly significant across all specifications, confirming robustness to alternative clustering, fixed-effect, and control-variable choices.
+
+---
+
+## Table 9. Conformity Index Analysis
+
+As an aggregate test of Miller's (2013) core proposition, we regress firm performance on the lagged **conformity index** and its square. The conformity index is pre-computed in the panel data as:
+
+$$\text{CI}_{it} = 1 - \sum_{k=1}^{6} z_{|x_{ikt}|}$$
+
+where each $z_{|x_{ikt}|}$ is the standardized absolute deviation on dimension $k$ (mean 0, SD 1). Higher CI values indicate greater overall strategic conformity to industry norms. An inverted-U relationship (positive linear, negative quadratic coefficient) would support the "optimal conformity" hypothesis.
+
+| Statistic                    | ROA            | Tobin's Q      |
+|------------------------------|----------------|----------------|
+| N (firm-years)               | 15,523         | 14,872         |
+| Firms                        | 985            | 928            |
+| Years                        | 45             | 45             |
+| Linear coef. (β₁)            | 0.0005         | −0.0031        |
+| SE (β₁)                      | 0.0005         | 0.0070         |
+| p-value (β₁)                 | 0.330          | 0.661          |
+| Quadratic coef. (β₂)         | 0.0000         | 0.0006         |
+| SE (β₂)                      | 0.0001         | 0.0013         |
+| p-value (β₂)                 | 0.639          | 0.643          |
+| Within-R²                    | 0.000          | 0.000          |
+| Estimated optimum (CI units) | 4.12           | −8.82          |
+
+*Notes:* Neither the linear nor the quadratic term is statistically significant in either outcome, and the within-R² is effectively zero. These results suggest that the **aggregate conformity index does not capture the relevant variation** — once firm and year fixed effects are absorbed, the overall degree of conformity has no predictive power for ROA or Tobin's Q. This is consistent with the main results showing that **which dimensions** a firm deviates on (and their interactions) matter far more than the aggregate level of nonconformity. The inverted-U hypothesis is not supported at the aggregate level; strategy positioning must be examined dimension-by-dimension.
 
 ---
 
 ## Summary of Main Findings
 
-1. **Strategy interactions matter.** The 15 cross terms are jointly significant at p < 0.001 in both outcomes and every robustness specification. Ignoring them (M2) leads to an 8.9% optimality gap for ROA and 4.6% for Tobin's Q.
+1. **Variables match Miller (2013).** All six strategy variables are measured as standardized deviations from 3-digit SIC industry medians (number of SDs), directly replicating Miller's (2013) nonconformity operationalization. The panel already contained these pre-computed as `x_rnd`, `x_capint`, `x_lev`, `x_adv`, `x_div`, `x_risk`.
 
-2. **Joint optimization is essential for Tobin's Q.** The M1 individual model — which optimizes each dimension separately — loses 30.8% of achievable Tobin's Q because it cannot discover the leverage-zero recommendation that emerges from the negative Leverage × Dividend policy and Leverage × Unsystematic risk interactions.
+2. **Strategy interactions matter.** The 15 cross terms are jointly significant at p < 0.001 (ROA) and p = 0.001 (Tobin's Q) in the main specification and remain significant across all robustness checks.
 
-3. **Key interactions.** Two cross terms dominate consistently: (a) *Leverage × Dividend policy* is negative in both outcomes, meaning high-dividend firms should carry less debt; (b) *Dividend policy × Unsystematic risk* is strongly negative, meaning volatile firms should limit dividends.
+3. **Substantial optimality gaps.** Ignoring cross terms (M2 additive model) leads to a 27.4% performance loss for ROA and 7.8% for Tobin's Q relative to the full quadratic benchmark. For ROA, the individual model (M1) is actually *less harmful* than the additive model (13.5% gap vs. 27.4%), because the additive model's joint optimizer exploits the negative R&D × Advertising cross term in a way that reduces ROA.
 
-4. **Boundary optima.** Most strategy variables hit a boundary of the observed support at the optimum, suggesting either genuine corner solutions or that important non-linearities lie outside the observed data range. Dividend policy is the main exception, with an interior optimum in the ROA sample (≈ 0.39).
+4. **Key cross-term interactions.** Two interactions stand out: (a) **Leverage × Dividend** is consistently negative, meaning above-median leverage is more costly for firms with above-median dividend generosity; (b) **R&D × Advertising** is negative in both outcomes, suggesting high innovation and high advertising nonconformity are substitutes that do not compound.
 
-5. **Pre-pandemic stability.** Restricting to 1963–2019 (24,112 ROA firm-years; 21,518 Tobin's Q firm-years) produces qualitatively identical conclusions to the full sample, confirming the results are not driven by pandemic-era disruptions.
+5. **Optimal positioning.** The full model recommends **strong below-median leverage** (∼1.85 SDs below industry median), **strong above-median dividends** (∼3.5 SDs above), and **below-median advertising and unsystematic risk** across both outcomes. These are corner solutions, reflecting that the estimated performance surface rises monotonically to the observed support boundaries on these dimensions.
+
+6. **Conformity index is uninformative in aggregate.** The composite conformity index has no predictive power for ROA or Tobin's Q once firm and year fixed effects are absorbed. This reinforces the importance of the multidimensional, interaction-based approach.

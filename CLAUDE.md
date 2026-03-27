@@ -19,7 +19,9 @@ Replicates and extends Miller (2013) — studies strategic conformity of Fortune
 - `2013_miller.pdf` — source paper
 
 ## 6 Core Variables (CORE_VARS)
-`rnd_intensity`, `capital_intensity`, `leverage`, `adv_intensity`, `div_policy`, `unsystematic_risk`
+`x_rnd`, `x_capint`, `x_lev`, `x_adv`, `x_div`, `x_risk`
+
+These are **standardized deviations from 3-digit SIC industry medians** (number of SDs), matching Miller (2013)'s exact variable definitions. The raw ratios (`rnd_intensity`, `capital_intensity`, etc.) are also in the CSV but are NOT used in the regression — the `x_` columns are the correct inputs.
 
 ## Regression
 - Two-way clustered FE: firm + year fixed effects absorbed via alternating projections (`absorb_fixed_effects`)
@@ -57,7 +59,12 @@ Replicates and extends Miller (2013) — studies strategic conformity of Fortune
 - SSH key at `~/.ssh/id_rsa` authenticates as `skywalker6174`
 - `output/` data CSVs are not tracked
 
-## Confirmed Results (Tables recovered from OD.pdf)
-- ROA full quadratic optimum: **0.294073**
-- Tobin's q full quadratic optimum: **4.839133**
-- Full model > additive model optimum due to cross-term interactions
+## Confirmed Results (pre-pandemic sample 1963–2019, using x_ deviation variables)
+- ROA full quadratic optimum: **0.1951** (M2 gap: 27.4%, M1 gap: 13.5%)
+- Tobin's Q full quadratic optimum: **2.9461** (M2 gap: 7.8%, M1 gap: 7.8%)
+- Cross terms jointly significant: ROA χ²(15)=56.0 p<0.001; Tobin's Q χ²(15)=37.5 p=0.001
+- Conformity index has no predictive power after absorbing firm/year FEs
+
+## Conformity Index Output Files
+- `output/{outcome}/conformity_index_main.csv` — summary stats and optimal conformity level
+- `output/{outcome}/conformity_index_coefficients.csv` — coefficient table
