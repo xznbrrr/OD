@@ -41,7 +41,7 @@ Key findings:
 \begin{itemize}
     \item \textbf{Simulation:} With a known data-generating process ($K=6$, $N=100$, $\sigma=4.0$), the correctly specified full quadratic model (M3) still incurs a 17.7\% optimality gap due to overfitting---simpler models can yield more robust prescriptions under limited data.
     \item \textbf{Empirical (Fortune 1000, 1963--2019):} Cross-term interactions between strategy dimensions are jointly significant ($p < 0.001$ for ROA, $p = 0.001$ for Tobin's Q). Ignoring them costs up to 27.4\% of achievable ROA and 7.8\% of Tobin's Q.
-    \item \textbf{Nonconformity index:} The aggregate nonconformity index (Miller 2013) has no predictive power once firm and year fixed effects are absorbed---\emph{which} dimensions a firm deviates on matters, not the overall level of nonconformity.
+    \item \textbf{Nonconformity index:} The aggregate nonconformity index \citep{miller2013} has no predictive power once firm and year fixed effects are absorbed---\emph{which} dimensions a firm deviates on matters, not the overall level of nonconformity.
 \end{itemize}
 
 Section~\ref{sec:simulation} presents the simulation experiment. Section~\ref{sec:empirical} reports the empirical analysis.
@@ -196,12 +196,12 @@ Tobin's Q & 15,062     &   956 & 55    \\
 
 \subsubsection{Strategy Variables}
 
-Following \citet{miller2013}, the six strategy variables measure \emph{nonconformity}---the number of standard deviations by which a firm's strategy departs from its 3-digit SIC industry median in a given year:
+Following \citet{miller2013}, the six strategy variables measure deviation from conformity---the number of standard deviations by which a firm's strategy departs from its 3-digit SIC industry median in a given year:
 \begin{equation}
     x_{ikt} = \frac{r_{ikt} - \text{median}_{kt}(r)}{\text{SD}_{kt}(r)},
-    \label{eq:nonconformity}
+    \label{eq:deviation}
 \end{equation}
-where $r_{ikt}$ is the raw strategy ratio for firm $i$, dimension $k$, year $t$. A value of $x_{ikt} = 0$ indicates exact conformity to the industry median; positive values indicate above-median nonconformity.
+where $r_{ikt}$ is the raw strategy ratio for firm $i$, dimension $k$, year $t$. A value of $x_{ikt} = 0$ indicates exact conformity to the industry median; positive values indicate above-median deviation.
 
 \begin{table}[htbp]
 \centering
@@ -211,12 +211,12 @@ where $r_{ikt}$ is the raw strategy ratio for firm $i$, dimension $k$, year $t$.
 \toprule
 Variable & Label & Raw ratio numerator / denominator \\
 \midrule
-$x_{\text{rnd}}$    & R\&D nonconformity             & R\&D expenditure / sales \\
-$x_{\text{capint}}$ & Capital intensity nonconformity & Net PPE / sales \\
-$x_{\text{lev}}$    & Leverage nonconformity          & Long-term debt / total assets \\
-$x_{\text{adv}}$    & Advertising nonconformity       & Advertising expenditure / sales \\
-$x_{\text{div}}$    & Dividend nonconformity          & Dividends / earnings \\
-$x_{\text{risk}}$   & Unsystematic risk nonconformity & Residual variance of daily returns \\
+$x_{\text{rnd}}$    & R\&D deviation             & R\&D expenditure / sales \\
+$x_{\text{capint}}$ & Capital intensity deviation & Net PPE / sales \\
+$x_{\text{lev}}$    & Leverage deviation          & Long-term debt / total assets \\
+$x_{\text{adv}}$    & Advertising deviation       & Advertising expenditure / sales \\
+$x_{\text{div}}$    & Dividend deviation          & Dividends / earnings \\
+$x_{\text{risk}}$   & Unsystematic risk deviation & Residual variance of daily returns \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -251,7 +251,7 @@ Optimal strategy vectors are found by solving the box-constrained QP~\eqref{eq:q
 
 \subsubsection{Pairwise Correlations}
 
-Table~\ref{tab:correlations} reports pairwise Pearson correlations among the six lagged nonconformity variables. All correlations are modest in magnitude. The strongest pair is Dividend--Risk ($r \approx -0.35$), indicating that firms conforming more on dividend policy tend to deviate more on unsystematic risk. Leverage--Capital intensity is the next strongest ($r \approx 0.21$).
+Table~\ref{tab:correlations} reports pairwise Pearson correlations among the six lagged deviation variables. All correlations are modest in magnitude. The strongest pair is Dividend--Risk ($r \approx -0.35$), indicating that firms conforming more on dividend policy tend to deviate more on unsystematic risk. Leverage--Capital intensity is the next strongest ($r \approx 0.21$).
 
 \begin{table}[htbp]
 \centering
@@ -338,7 +338,7 @@ Adding the 15 pairwise cross terms raises within-$R^2$ by approximately 1.2--1.3
 Two interactions stand out (Table~\ref{tab:cross_terms}):
 \begin{itemize}
     \item \textbf{Leverage $\times$ Dividend} is consistently negative in both outcomes, implying that above-median leverage is more costly for firms with above-median dividend generosity.
-    \item \textbf{R\&D $\times$ Advertising} is negative in both outcomes, suggesting that high R\&D and high advertising nonconformity are substitutes rather than complements.
+    \item \textbf{R\&D $\times$ Advertising} is negative in both outcomes, suggesting that high R\&D and high advertising deviation are substitutes rather than complements.
 \end{itemize}
 
 \begin{table}[htbp]
@@ -463,8 +463,8 @@ Table~\ref{tab:nonconformity} reports the nonconformity index regression. Neithe
 \cmidrule(lr){2-3} \cmidrule(lr){4-5}
 Term & Coef. & SE & Coef. & SE \\
 \midrule
-Linear (NCI)          & $-$0.0005 & (0.0005) &  0.0034  & (0.0069) \\
-Quadratic (NCI$^2$)   &    0.0001 & (0.0001) &  0.0007  & (0.0012) \\
+Linear (NCI)          &  0.0004 & (0.0005) & $-$0.0047  & (0.0066) \\
+Quadratic (NCI$^2$)   &  0.0001 & (0.0001) &  0.0007  & (0.0012) \\
 \midrule
 $N$ (firm-years) & \multicolumn{2}{c}{15,523} & \multicolumn{2}{c}{14,872} \\
 Within-$R^2$     & \multicolumn{2}{c}{0.000}  & \multicolumn{2}{c}{0.000} \\
@@ -480,10 +480,10 @@ Within-$R^2$     & \multicolumn{2}{c}{0.000}  & \multicolumn{2}{c}{0.000} \\
 \bibliographystyle{apalike}
 \begin{thebibliography}{9}
 
-\bibitem[Miller, 2013]{miller2013}
-Miller, D. (2013).
-\newblock Technological diversity, related diversification, and firm performance.
-\newblock {\em Strategic Management Journal}, 34(11):1351--1368.
+\bibitem[Miller et~al., 2013]{miller2013}
+Miller, D., Breton-Miller, I.~L., and Lester, R.~H. (2013).
+\newblock Family firm governance, strategic conformity, and performance: Institutional vs.\ strategic perspectives.
+\newblock {\em Organization Science}, 24(1):189--209.
 
 \end{thebibliography}
 
