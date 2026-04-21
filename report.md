@@ -23,11 +23,11 @@ $$x_{ikt} = \frac{\text{(firm } i \text{'s strategy on dimension } k \text{ in y
 
 A firm with $x_{ikt} = 0$ exactly conforms to its industry median on dimension $k$; $x_{ikt} > 0$ means above-median nonconformity in the direction of greater intensity.
 
-The **conformity index** aggregates all six dimensions:
+Following Miller (2013), the **nonconformity index** aggregates all six dimensions:
 
-$$\text{Conformity index} = 1 - \sum_{k=1}^{6} z_{|x_{ikt}|}$$
+$$\text{NCI}_{it} = \sum_{k=1}^{6} z_{|x_{ikt}|}$$
 
-where $z_{|x_{ikt}|}$ is the standardized absolute deviation on dimension $k$. Higher values indicate greater overall strategic conformity to industry norms.
+where $z_{|x_{ikt}|}$ is the within-sample standardized absolute deviation on dimension $k$. Higher values indicate greater overall strategic nonconformity.
 
 ---
 
@@ -258,29 +258,28 @@ The joint significance of the additive and full-quadratic term blocks is checked
 
 ---
 
-## Table 9. Conformity Index Analysis
+## Table 9. Nonconformity Index Analysis
 
-As an aggregate test of Miller's (2013) core proposition, we regress firm performance on the lagged **conformity index** and its square. The conformity index is pre-computed in the panel data as:
+As an aggregate test of Miller's (2013) core proposition, we regress firm performance on the lagged **nonconformity index** and its square. Following Miller (2013), the nonconformity index is computed as:
 
-$$\text{CI}_{it} = 1 - \sum_{k=1}^{6} z_{|x_{ikt}|}$$
+$$\text{NCI}_{it} = \sum_{k=1}^{6} z_{|x_{ikt}|}$$
 
-where each $z_{|x_{ikt}|}$ is the standardized absolute deviation on dimension $k$ (mean 0, SD 1). Higher CI values indicate greater overall strategic conformity to industry norms. An inverted-U relationship (positive linear, negative quadratic coefficient) would support the "optimal conformity" hypothesis.
+where each $z_{|x_{ikt}|}$ is the within-sample standardized (mean 0, SD 1) absolute deviation on dimension $k$. Higher NCI values indicate greater overall strategic nonconformity. An inverted-U relationship (positive linear, negative quadratic coefficient) would support an "optimal nonconformity" hypothesis.
 
-| Statistic                    | ROA            | Tobin's Q      |
-|------------------------------|----------------|----------------|
-| N (firm-years)               | 15,523         | 14,872         |
-| Firms                        | 985            | 928            |
-| Years                        | 45             | 45             |
-| Linear coef. (β₁)            | 0.0005         | −0.0031        |
-| SE (β₁)                      | 0.0005         | 0.0070         |
-| p-value (β₁)                 | 0.330          | 0.661          |
-| Quadratic coef. (β₂)         | 0.0000         | 0.0006         |
-| SE (β₂)                      | 0.0001         | 0.0013         |
-| p-value (β₂)                 | 0.639          | 0.643          |
-| Within-R²                    | 0.000          | 0.000          |
-| Estimated optimum (CI units) | 4.12           | −8.82          |
+| Statistic                     | ROA            | Tobin's Q      |
+|-------------------------------|----------------|----------------|
+| N (firm-years)                | 15,523         | 14,872         |
+| Firms                         | 985            | 938            |
+| Years                         | 55             | 55             |
+| Linear coef. (β₁)             | −0.0005        | 0.0034         |
+| SE (β₁)                       | 0.0005         | 0.0069         |
+| p-value (β₁)                  | 0.342          | 0.627          |
+| Quadratic coef. (β₂)          | 0.0001         | 0.0007         |
+| SE (β₂)                       | 0.0001         | 0.0012         |
+| p-value (β₂)                  | 0.630          | 0.602          |
+| Within-R²                     | 0.000          | 0.000          |
 
-*Notes:* Neither the linear nor the quadratic term is statistically significant in either outcome, and the within-R² is effectively zero. These results suggest that the **aggregate conformity index does not capture the relevant variation** — once firm and year fixed effects are absorbed, the overall degree of conformity has no predictive power for ROA or Tobin's Q. This is consistent with the main results showing that **which dimensions** a firm deviates on (and their interactions) matter far more than the aggregate level of nonconformity. The inverted-U hypothesis is not supported at the aggregate level; strategy positioning must be examined dimension-by-dimension.
+*Notes:* Neither the linear nor the quadratic term is statistically significant in either outcome, and the within-R² is effectively zero. These results suggest that the **aggregate nonconformity index does not capture the relevant variation** — once firm and year fixed effects are absorbed, the overall degree of nonconformity has no predictive power for ROA or Tobin's Q. This is consistent with the main results showing that **which dimensions** a firm deviates on (and their interactions) matter far more than the aggregate level of nonconformity.
 
 ---
 
@@ -296,4 +295,4 @@ where each $z_{|x_{ikt}|}$ is the standardized absolute deviation on dimension $
 
 5. **Optimal positioning.** The full model recommends **strong below-median leverage** (∼1.85 SDs below industry median), **strong above-median dividends** (∼3.5 SDs above), and **below-median advertising and unsystematic risk** across both outcomes. These are corner solutions, reflecting that the estimated performance surface rises monotonically to the observed support boundaries on these dimensions.
 
-6. **Conformity index is uninformative in aggregate.** The composite conformity index has no predictive power for ROA or Tobin's Q once firm and year fixed effects are absorbed. This reinforces the importance of the multidimensional, interaction-based approach.
+6. **Nonconformity index is uninformative in aggregate.** The composite nonconformity index (Miller 2013) has no predictive power for ROA or Tobin's Q once firm and year fixed effects are absorbed. This reinforces the importance of the multidimensional, interaction-based approach.

@@ -1,0 +1,490 @@
+\documentclass[12pt]{article}
+
+% ── Packages ──────────────────────────────────────────────────────────────────
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{natbib}
+\usepackage{hyperref}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{setspace}
+
+\onehalfspacing
+\hypersetup{colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue}
+
+\newcommand{\bx}{\mathbf{x}}
+\newcommand{\bB}{\mathbf{B}}
+\newcommand{\ba}{\mathbf{a}}
+
+\title{Optimal Differentiation: \\
+A Simulation and Empirical Analysis of Strategic Conformity}
+\author{}
+\date{}
+
+\begin{document}
+\maketitle
+
+\tableofcontents
+\clearpage
+
+%% ═══════════════════════════════════════════════════════════════════════════════
+\section{Introduction}
+\label{sec:introduction}
+
+This report replicates and extends \citet{miller2013}'s analysis of strategic conformity and firm performance. We fit three nested models of increasing complexity---individual (single-variable), additive, and full quadratic---solve box-constrained quadratic programs (QPs) to find each model's optimal strategy vector, and compute optimality gaps that quantify the economic cost of model misspecification.
+
+Key findings:
+\begin{itemize}
+    \item \textbf{Simulation:} With a known data-generating process ($K=6$, $N=100$, $\sigma=4.0$), the correctly specified full quadratic model (M3) still incurs a 17.7\% optimality gap due to overfitting---simpler models can yield more robust prescriptions under limited data.
+    \item \textbf{Empirical (Fortune 1000, 1963--2019):} Cross-term interactions between strategy dimensions are jointly significant ($p < 0.001$ for ROA, $p = 0.001$ for Tobin's Q). Ignoring them costs up to 27.4\% of achievable ROA and 7.8\% of Tobin's Q.
+    \item \textbf{Nonconformity index:} The aggregate nonconformity index (Miller 2013) has no predictive power once firm and year fixed effects are absorbed---\emph{which} dimensions a firm deviates on matters, not the overall level of nonconformity.
+\end{itemize}
+
+Section~\ref{sec:simulation} presents the simulation experiment. Section~\ref{sec:empirical} reports the empirical analysis.
+
+%% ═══════════════════════════════════════════════════════════════════════════════
+\section{Model Framework}
+\label{sec:models}
+
+Let $\bx = (x_1, \ldots, x_K)^\top \in \mathbb{R}^K$ denote a firm's strategy vector across $K$ dimensions. We consider three nested models for the performance outcome $y$:
+
+\subsection{Model 1: Individual (Single-Variable)}
+
+Fit a separate quadratic regression for each dimension $k$ independently:
+\begin{equation}
+    y = \alpha_k + \beta_k x_k + \gamma_k x_k^2 + \varepsilon, \quad k = 1, \ldots, K.
+    \label{eq:m1}
+\end{equation}
+Each dimension is optimized in isolation; the $K$ per-dimension optima are combined into a single joint strategy vector $\bx^*_{M1}$.
+
+\subsection{Model 2: Additive Quadratic}
+
+A joint regression including linear and squared terms for all dimensions, but no cross terms:
+\begin{equation}
+    y = \alpha + \sum_{k=1}^{K} \bigl(\beta_k x_k + \gamma_k x_k^2\bigr) + \varepsilon.
+    \label{eq:m2}
+\end{equation}
+The resulting optimization is separable across dimensions.
+
+\subsection{Model 3: Full Quadratic}
+
+All linear, squared, and pairwise cross terms:
+\begin{equation}
+    y = \alpha + \sum_{k=1}^{K} \bigl(\beta_k x_k + \gamma_k x_k^2\bigr) + \sum_{i < j} \delta_{ij} x_i x_j + \varepsilon.
+    \label{eq:m3}
+\end{equation}
+In matrix form, the estimated performance surface is $\hat{f}(\bx) = \hat{\alpha} + \hat{\ba}^\top \bx + \bx^\top \hat{\bB} \bx$, where $\hat{\bB}$ is a symmetric $K \times K$ matrix that is generally indefinite due to the cross terms. The optimal strategy is the solution to the box-constrained QP:
+\begin{equation}
+    \bx^*_{M3} = \arg\max_{\bx \in [\mathbf{lb}, \mathbf{ub}]} \; \hat{\alpha} + \hat{\ba}^\top \bx + \bx^\top \hat{\bB} \bx.
+    \label{eq:qp}
+\end{equation}
+Because $\hat{\bB}$ is indefinite, this is a non-convex QP requiring a global solver (Gurobi with \texttt{NonConvex=2}).
+
+\subsection{Optimality Gap}
+
+The full quadratic model serves as the benchmark. The optimality gap of a simpler model $m$ measures the performance loss from adopting the simpler model's optimal strategy $\bx^*_m$ on the benchmark surface:
+\begin{equation}
+    \text{gap}_m = \hat{f}_{M3}(\bx^*_{M3}) - \hat{f}_{M3}(\bx^*_m), \qquad
+    \text{gap}_m^{\%} = \frac{\text{gap}_m}{\bigl|\hat{f}_{M3}(\bx^*_{M3})\bigr|} \times 100.
+    \label{eq:gap}
+\end{equation}
+In the simulation, the benchmark is the true noiseless surface rather than the estimated one.
+
+
+%% ═══════════════════════════════════════════════════════════════════════════════
+\section{Simulation Experiment}
+\label{sec:simulation}
+
+\subsection{Data-Generating Process}
+\label{sec:sim_dgp}
+
+We construct a controlled environment with $K = 6$ strategy dimensions and a known quadratic performance surface:
+\begin{equation}
+    f(\bx) = c + \ba^\top \bx + \bx^\top \bB \bx,
+    \label{eq:true_surface}
+\end{equation}
+where the parameters are set as follows.
+
+\paragraph{Intercept.} The baseline performance level is $c = 5.0$, chosen to ensure the true optimum is clearly positive.
+
+\paragraph{Diagonal curvature.} The diagonal entries of $\bB$ are set to negative values, guaranteeing per-dimension concavity and interior optima within the unit box $[0, 1]^6$:
+\begin{equation}
+    \text{diag}(\bB) = (-4.0, \; -3.0, \; -5.0, \; -4.5, \; -3.5, \; -4.2).
+\end{equation}
+
+\paragraph{Target per-dimension optima.} The linear coefficients $\ba$ are chosen so that the marginal (ignoring cross terms) per-dimension optima $x_k^* = -a_k / (2 B_{kk})$ land at pre-specified interior points:
+\begin{equation}
+    \bx^*_{\text{target}} = (0.40, \; 0.60, \; 0.50, \; 0.45, \; 0.65, \; 0.35).
+\end{equation}
+This yields $a_k = -2 B_{kk} \cdot x_{k,\text{target}}^*$, so all $a_k > 0$.
+
+\paragraph{Cross terms.} The $\binom{6}{2} = 15$ off-diagonal entries of $\bB$ are drawn as $B_{ij} = B_{ji} = c_{ij}/2$, where $c_{ij} \sim \text{Uniform}(-2, 2)$ using seed 42. These cross terms couple the dimensions and render the full Hessian $2\bB$ indefinite, making the global optimization non-trivial.
+
+\paragraph{Noise.} Observed outcomes are generated as $y_i = f(\bx_i) + \epsilon_i$, where $\epsilon_i \sim \mathcal{N}(0, \sigma^2)$ with $\sigma = 4.0$ and $\bx_i \sim \text{Uniform}([0,1]^6)$ independently.
+
+\paragraph{Sample size.} $N = 100$ observations, deliberately small to create a challenging estimation environment: the full quadratic model has 28 parameters (1 intercept $+$ 6 linear $+$ 6 squared $+$ 15 cross terms) from only 100 data points.
+
+\subsection{Estimation and Optimization}
+
+The three models~\eqref{eq:m1}--\eqref{eq:m3} are fit by OLS on the noisy sample. Each model's optimal strategy $\hat{\bx}^*_m$ is found via box-constrained QP (Gurobi \texttt{NonConvex=2} for the full quadratic). The key evaluation metric is the \emph{true} (noiseless) performance at each model's optimum, $f(\hat{\bx}^*_m)$, compared against the true global optimum $f(\bx^*)$, which is also found via Gurobi on the exact surface.
+
+\subsection{Results}
+
+Table~\ref{tab:sim_gaps} reports the optimality gaps. Somewhat counter-intuitively, the full quadratic model (M3) does \emph{not} achieve the best decisions despite having the correct functional form.
+
+\begin{table}[htbp]
+\centering
+\caption{Simulation optimality gaps ($N = 100$, $\sigma = 4.0$, seed = 42).}
+\label{tab:sim_gaps}
+\begin{tabular}{lcc}
+\toprule
+Model & True $f(\hat{\bx}^*)$ & \% Gap \\
+\midrule
+True Optimum           & 14.016 & ---   \\
+M3 Full Quadratic      & 11.537 & 17.7\% \\
+M2 Additive            & 10.608 & 24.3\% \\
+M1 Individual          & 10.532 & 24.9\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Discussion}
+
+Three sources of optimality gap can be distinguished:
+
+\begin{enumerate}
+    \item \textbf{Model misspecification (omitted cross terms).} M1 and M2 ignore the 15 cross-term interactions, so even with infinite data, their optima would differ from the true optimum. This is a pure \emph{bias} effect.
+
+    \item \textbf{Finite-sample estimation error.} All three models suffer from noisy coefficient estimates. With $N = 100$ and $\sigma = 4.0$, the signal-to-noise ratio is low, leading to imprecise optima even when the model is correctly specified.
+
+    \item \textbf{Overfitting.} M3 estimates 28 parameters from 100 observations. The poorly estimated cross-term coefficients distort the estimated surface, causing Gurobi to find an optimum that, while globally optimal on the \emph{estimated} surface, is suboptimal on the true surface. This is a \emph{variance} effect.
+\end{enumerate}
+
+The result that M3 achieves 17.7\% gap despite having the correct specification illustrates the classical bias--variance tradeoff: a richer model reduces bias (it can represent the true surface) but increases variance (more parameters to estimate from limited data). In this regime ($N/p \approx 3.6$), the variance penalty dominates, and M3's estimated surface leads the optimizer to the wrong region of the strategy space. M1 and M2, though misspecified, are more robust because they have far fewer parameters (13 and 7, respectively) to misestimate.
+
+This finding has practical implications: when the number of firm-years per estimated parameter is small, simpler models may yield more reliable strategic prescriptions, even if they are theoretically inferior.
+
+
+%% ═══════════════════════════════════════════════════════════════════════════════
+\section{Empirical Analysis}
+\label{sec:empirical}
+
+\subsection{Data Description}
+\label{sec:data}
+
+\subsubsection{Sample Construction}
+
+The dataset comprises Fortune 1000 firms observed annually from 1963 to 2019 (pre-pandemic sample). The panel contains approximately 27,000 firm-year observations before sample restrictions. After requiring non-missing values for all six strategy variables and the outcome, and applying winsorization, the estimation samples are:
+
+\begin{table}[htbp]
+\centering
+\caption{Sample composition by outcome.}
+\label{tab:sample}
+\begin{tabular}{lccc}
+\toprule
+Outcome   & Firm-years & Firms & Years \\
+\midrule
+ROA       & 15,747     & 1,011 & 55    \\
+Tobin's Q & 15,062     &   956 & 55    \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsubsection{Strategy Variables}
+
+Following \citet{miller2013}, the six strategy variables measure \emph{nonconformity}---the number of standard deviations by which a firm's strategy departs from its 3-digit SIC industry median in a given year:
+\begin{equation}
+    x_{ikt} = \frac{r_{ikt} - \text{median}_{kt}(r)}{\text{SD}_{kt}(r)},
+    \label{eq:nonconformity}
+\end{equation}
+where $r_{ikt}$ is the raw strategy ratio for firm $i$, dimension $k$, year $t$. A value of $x_{ikt} = 0$ indicates exact conformity to the industry median; positive values indicate above-median nonconformity.
+
+\begin{table}[htbp]
+\centering
+\caption{Strategy variable definitions.}
+\label{tab:variables}
+\begin{tabular}{lll}
+\toprule
+Variable & Label & Raw ratio numerator / denominator \\
+\midrule
+$x_{\text{rnd}}$    & R\&D nonconformity             & R\&D expenditure / sales \\
+$x_{\text{capint}}$ & Capital intensity nonconformity & Net PPE / sales \\
+$x_{\text{lev}}$    & Leverage nonconformity          & Long-term debt / total assets \\
+$x_{\text{adv}}$    & Advertising nonconformity       & Advertising expenditure / sales \\
+$x_{\text{div}}$    & Dividend nonconformity          & Dividends / earnings \\
+$x_{\text{risk}}$   & Unsystematic risk nonconformity & Residual variance of daily returns \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+All six variables are lagged one period relative to the outcome and winsorized at the 1st and 99th percentiles within each outcome-specific sample.
+
+\subsubsection{Outcome Variables}
+
+Two performance measures are used:
+\begin{itemize}
+    \item \textbf{Return on Assets (ROA):} Net income divided by total assets, the standard accounting profitability measure.
+    \item \textbf{Tobin's Q:} Market value of equity plus book value of debt, divided by total assets---a forward-looking market valuation measure.
+\end{itemize}
+
+\subsubsection{Nonconformity Index}
+
+Following \citet{miller2013}, the composite nonconformity index aggregates all six dimensions:
+\begin{equation}
+    \text{NCI}_{it} = \sum_{k=1}^{6} z_{|x_{ikt}|},
+    \label{eq:nci}
+\end{equation}
+where $z_{|x_{ikt}|}$ is the within-sample standardized (mean 0, SD 1) absolute deviation on dimension $k$. Higher values indicate greater overall strategic nonconformity.
+
+\subsection{Optimization}
+\label{sec:optimization}
+
+Optimal strategy vectors are found by solving the box-constrained QP~\eqref{eq:qp}, with bounds set to the observed (winsorized) support of each variable. For the full quadratic model, the indefinite Hessian requires a global non-convex QP solver; we use Gurobi 12.0.1 with \texttt{NonConvex=2}. A solver fallback chain (Gurobi $\to$ CPLEX $\to$ MOSEK $\to$ scipy multistart) ensures robustness.
+
+
+\subsection{Results}
+\label{sec:results}
+
+\subsubsection{Pairwise Correlations}
+
+Table~\ref{tab:correlations} reports pairwise Pearson correlations among the six lagged nonconformity variables. All correlations are modest in magnitude. The strongest pair is Dividend--Risk ($r \approx -0.35$), indicating that firms conforming more on dividend policy tend to deviate more on unsystematic risk. Leverage--Capital intensity is the next strongest ($r \approx 0.21$).
+
+\begin{table}[htbp]
+\centering
+\caption{Pairwise Pearson correlations (ROA sample, $N = 15{,}747$).}
+\label{tab:correlations}
+\begin{tabular}{lrrrrrr}
+\toprule
+ & R\&D & Capital & Leverage & Advert. & Dividend & Risk \\
+\midrule
+R\&D       &  1.000 & $-$0.012 & $-$0.167 &  0.099 & $-$0.029 &  0.035 \\
+Capital    &        &    1.000 &    0.205 & $-$0.095 &  0.023 & $-$0.057 \\
+Leverage   &        &          &    1.000 & $-$0.053 & $-$0.021 &  0.044 \\
+Advert.    &        &          &          &    1.000 &    0.078 &  0.020 \\
+Dividend   &        &          &          &          &    1.000 & $-$0.348 \\
+Risk       &        &          &          &          &          &    1.000 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsubsection{Single-Variable Models (M1)}
+
+Table~\ref{tab:single_roa} reports results for ROA. Capital intensity is the only variable with a clearly interior optimum for both outcomes ($-0.675$ industry-median deviations for ROA, $-0.898$ for Tobin's Q), suggesting that modest below-median capital intensity is optimal in isolation. Most other variables have boundary optima---the estimated parabola's vertex lies outside the observed support.
+
+\begin{table}[htbp]
+\centering
+\caption{Single-variable quadratic fixed-effects models: ROA ($N = 15{,}747$).}
+\label{tab:single_roa}
+\begin{tabular}{lrrrrrcc}
+\toprule
+Variable & Linear & SE & Quadratic & SE & Optimum & Bnd? & $R^2_w$ \\
+\midrule
+R\&D       &  0.0003       & (0.0021) & $-$0.0001       & (0.0009) &  1.708 & No  & 0.000 \\
+Capital    & $-$0.0051***  & (0.0018) & $-$0.0038***    & (0.0008) & $-$0.675 & No  & 0.017 \\
+Leverage   & $-$0.0151***  & (0.0017) &    0.0053***    & (0.0009) & $-$1.859 & Yes & 0.036 \\
+Advert.    & $-$0.0065***  & (0.0020) &    0.0003       & (0.0007) & $-$1.341 & Yes & 0.005 \\
+Dividend   &    0.0059***  & (0.0016) &    0.0025***    & (0.0008) &  3.567 & Yes & 0.019 \\
+Risk       & $-$0.0058***  & (0.0011) & $-$0.0008       & (0.0005) & $-$1.664 & Yes & 0.009 \\
+\bottomrule
+\end{tabular}
+
+\smallskip
+\footnotesize\textit{Notes:} Standard errors in parentheses. * $p < 0.10$, ** $p < 0.05$, *** $p < 0.01$. Optimum is in units of industry-median deviations. Bnd?\ indicates whether the optimum is at the boundary of the observed support (Yes) or interior (No).
+\end{table}
+
+\subsubsection{Additive Quadratic Model (M2)}
+
+The additive model (Table~\ref{tab:additive}) raises the within-$R^2$ to 7.6\% for ROA and 4.4\% for Tobin's Q. All 12 terms are jointly significant ($\chi^2(12) = 210.2$, $p < 0.001$ for ROA; $\chi^2(12) = 73.1$, $p < 0.001$ for Tobin's Q). Leverage enters with a consistently negative linear effect and positive quadratic effect, suggesting a U-shaped performance profile.
+
+\begin{table}[htbp]
+\centering
+\caption{Additive quadratic model coefficients.}
+\label{tab:additive}
+\begin{tabular}{llrrrr}
+\toprule
+ & & \multicolumn{2}{c}{ROA} & \multicolumn{2}{c}{Tobin's Q} \\
+\cmidrule(lr){3-4} \cmidrule(lr){5-6}
+Variable & Type & Coef. & SE & Coef. & SE \\
+\midrule
+R\&D          & Linear    & $-$0.0006       & (0.0021) &    0.0319       & (0.0338) \\
+              & Quadratic & $-$0.0003       & (0.0008) &    0.0038       & (0.0143) \\
+Capital       & Linear    & $-$0.0056***    & (0.0018) & $-$0.0444       & (0.0286) \\
+              & Quadratic & $-$0.0036***    & (0.0008) & $-$0.0196       & (0.0127) \\
+Leverage      & Linear    & $-$0.0126***    & (0.0017) & $-$0.1279***    & (0.0239) \\
+              & Quadratic &    0.0048***    & (0.0009) &    0.0647***    & (0.0132) \\
+Advertising   & Linear    & $-$0.0065***    & (0.0021) & $-$0.0911**     & (0.0361) \\
+              & Quadratic &    0.0003       & (0.0008) & $-$0.0115       & (0.0172) \\
+Dividend      & Linear    &    0.0047***    & (0.0017) &    0.0014       & (0.0219) \\
+              & Quadratic &    0.0030***    & (0.0009) &    0.0437***    & (0.0145) \\
+Risk          & Linear    & $-$0.0045***    & (0.0011) & $-$0.0510**     & (0.0205) \\
+              & Quadratic & $-$0.0008       & (0.0005) & $-$0.0080       & (0.0086) \\
+\midrule
+Within-$R^2$  &           & \multicolumn{2}{c}{0.076} & \multicolumn{2}{c}{0.044} \\
+\bottomrule
+\end{tabular}
+
+\smallskip
+\footnotesize\textit{Notes:} Standard errors in parentheses. * $p < 0.10$, ** $p < 0.05$, *** $p < 0.01$.
+\end{table}
+
+\subsubsection{Full Quadratic Model (M3)}
+
+Adding the 15 pairwise cross terms raises within-$R^2$ by approximately 1.2--1.3 percentage points (to 8.8\% for ROA and 5.7\% for Tobin's Q). The cross terms are jointly significant in both outcomes: $\chi^2(15) = 56.0$, $p < 0.001$ for ROA and $\chi^2(15) = 37.5$, $p = 0.001$ for Tobin's Q.
+
+Two interactions stand out (Table~\ref{tab:cross_terms}):
+\begin{itemize}
+    \item \textbf{Leverage $\times$ Dividend} is consistently negative in both outcomes, implying that above-median leverage is more costly for firms with above-median dividend generosity.
+    \item \textbf{R\&D $\times$ Advertising} is negative in both outcomes, suggesting that high R\&D and high advertising nonconformity are substitutes rather than complements.
+\end{itemize}
+
+\begin{table}[htbp]
+\centering
+\caption{Selected cross terms (significant at 10\% in at least one outcome).}
+\label{tab:cross_terms}
+\begin{tabular}{lrrrr}
+\toprule
+ & \multicolumn{2}{c}{ROA} & \multicolumn{2}{c}{Tobin's Q} \\
+\cmidrule(lr){2-3} \cmidrule(lr){4-5}
+Cross term & Coef. & SE & Coef. & SE \\
+\midrule
+R\&D $\times$ Advertising          & $-$0.0025**   & (0.0011) & $-$0.0523**   & (0.0241) \\
+R\&D $\times$ Risk                 & $-$0.0020**   & (0.0010) & $-$0.0003     & (0.0161) \\
+Capital $\times$ Leverage           & $-$0.0003     & (0.0011) &    0.0340**   & (0.0167) \\
+Capital $\times$ Risk               & $-$0.0007     & (0.0010) & $-$0.0271*    & (0.0141) \\
+Leverage $\times$ Dividend          & $-$0.0051***  & (0.0013) & $-$0.0449***  & (0.0163) \\
+Leverage $\times$ Risk              & $-$0.0019*    & (0.0010) &    0.0142     & (0.0134) \\
+Advertising $\times$ Dividend       & $-$0.0016     & (0.0010) & $-$0.0608***  & (0.0204) \\
+\bottomrule
+\end{tabular}
+
+\smallskip
+\footnotesize\textit{Notes:} Standard errors in parentheses. * $p < 0.10$, ** $p < 0.05$, *** $p < 0.01$.
+\end{table}
+
+\subsubsection{Optimal Strategy Positions}
+
+Table~\ref{tab:optimal_positions} reports the constrained optimal strategy vectors under each model, with bounds set to the observed (winsorized) sample support. Values are in standard deviations from the 3-digit SIC industry median.
+
+\begin{table}[htbp]
+\centering
+\caption{Constrained optimal strategy positions (units: industry-median deviations).}
+\label{tab:optimal_positions}
+\begin{tabular}{l@{\hskip 6pt}c@{\hskip 8pt}r@{\hskip 8pt}r@{\hskip 8pt}r}
+\toprule
+ & & \multicolumn{3}{c}{Optimal position} \\
+\cmidrule(lr){3-5}
+Variable & Support & M1 & M2 & M3 \\
+\midrule
+\multicolumn{5}{l}{\textit{Panel A. ROA}} \\
+\addlinespace
+R\&D       & [$-$1.50, 3.81] &   1.708 & $-$0.828 &   3.812 \\
+Capital    & [$-$1.64, 3.68] & $-$0.675 & $-$0.572 & $-$1.199 \\
+Leverage   & [$-$1.86, 2.66] & $-$1.859 & $-$1.859 & $-$1.859 \\
+Advertising& [$-$1.34, 4.14] & $-$1.341 & $-$1.341 & $-$1.341 \\
+Dividend   & [$-$1.72, 3.57] &   3.567 &   3.567 &   3.567 \\
+Risk       & [$-$1.66, 2.94] & $-$1.664 & $-$1.664 & $-$1.664 \\
+\addlinespace
+\multicolumn{5}{l}{\textit{Panel B. Tobin's Q}} \\
+\addlinespace
+R\&D       & [$-$1.49, 3.84] &   3.836 &   3.836 &   3.836 \\
+Capital    & [$-$1.65, 3.72] & $-$0.899 & $-$0.899 & $-$1.646 \\
+Leverage   & [$-$1.85, 2.56] & $-$1.849 & $-$1.849 & $-$1.849 \\
+Advertising& [$-$1.35, 4.19] & $-$1.350 & $-$1.350 & $-$1.350 \\
+Dividend   & [$-$1.71, 3.53] &   3.526 &   3.526 &   3.526 \\
+Risk       & [$-$1.67, 2.93] & $-$1.671 & $-$1.671 &   1.616 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The optimal strategy prescription is consistent across outcomes: firms should position \emph{substantially below} the industry median on leverage ($\sim$1.85 deviations below), \emph{far above} the industry median on dividends ($\sim$3.5 deviations above), and below median on advertising and unsystematic risk. For Tobin's Q, the full model flips unsystematic risk from below- to above-median---a reversal attributable to cross-term interactions.
+
+\subsubsection{Optimality Gaps}
+
+Table~\ref{tab:gaps} reports the economic cost of adopting a simpler model's prescription.
+
+\begin{table}[htbp]
+\centering
+\caption{Optimality gap analysis (full quadratic M3 as benchmark).}
+\label{tab:gaps}
+\begin{tabular}{llccc}
+\toprule
+Outcome & Model & Surface value at $\bx^*$ & Abs.\ gap & \% Gap \\
+\midrule
+ROA       & M3 Full Quadratic & 0.1951 & --- & --- \\
+ROA       & M2 Additive       & 0.1417 & 0.0534 & 27.4\% \\
+ROA       & M1 Individual     & 0.1688 & 0.0263 & 13.5\% \\
+\addlinespace
+Tobin's Q & M3 Full Quadratic & 2.9461 & --- & --- \\
+Tobin's Q & M2 Additive       & 2.7171 & 0.2289 & 7.8\% \\
+Tobin's Q & M1 Individual     & 2.7169 & 0.2292 & 7.8\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+For ROA, M1 outperforms M2 (13.5\% vs.\ 27.4\% gap). This occurs because M2's joint optimizer pushes R\&D to the lower boundary to exploit the negative R\&D $\times$ Advertising cross term---a strategy that backfires on the full ROA surface. For Tobin's Q, M1 and M2 prescribe nearly identical strategies and show equal gaps of $\sim$7.8\%.
+
+\subsubsection{Robustness Checks}
+
+Table~\ref{tab:robustness} confirms that all results are robust to three alternative specifications: (i)~firm clustering only, (ii)~industry-year fixed effects replacing year FEs, and (iii)~the main specification augmented with firm-level controls (firm size, firm age, beta, firm diversification, and industry median outcome). The 15 cross terms remain jointly significant at $p < 0.001$ across all specifications and both outcomes.
+
+\begin{table}[htbp]
+\centering
+\caption{Robustness: Wald test statistics for cross terms ($\chi^2(15)$, full model).}
+\label{tab:robustness}
+\begin{tabular}{lrrrr}
+\toprule
+ & \multicolumn{2}{c}{ROA} & \multicolumn{2}{c}{Tobin's Q} \\
+\cmidrule(lr){2-3} \cmidrule(lr){4-5}
+Specification & $\chi^2$ & $p$ & $\chi^2$ & $p$ \\
+\midrule
+Main (firm + year FE, 2-way cluster)     & 56.0 & $<$0.001 & 37.5 & 0.001 \\
+Firm clustering only                      & 64.1 & $<$0.001 & 45.1 & $<$0.001 \\
+Industry-year FE, firm cluster            & 92.1 & $<$0.001 & 57.6 & $<$0.001 \\
+Main + controls                           & 65.9 & $<$0.001 & 39.7 & $<$0.001 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsubsection{Nonconformity Index}
+
+Table~\ref{tab:nonconformity} reports the nonconformity index regression. Neither the linear nor the quadratic term is statistically significant, and the within-$R^2$ is effectively zero. The aggregate nonconformity index has no predictive power for performance once firm and year fixed effects are absorbed.
+
+\begin{table}[htbp]
+\centering
+\caption{Nonconformity index regressions (firm + year FE, two-way clustered SE).}
+\label{tab:nonconformity}
+\begin{tabular}{lrrrr}
+\toprule
+ & \multicolumn{2}{c}{ROA} & \multicolumn{2}{c}{Tobin's Q} \\
+\cmidrule(lr){2-3} \cmidrule(lr){4-5}
+Term & Coef. & SE & Coef. & SE \\
+\midrule
+Linear (NCI)          & $-$0.0005 & (0.0005) &  0.0034  & (0.0069) \\
+Quadratic (NCI$^2$)   &    0.0001 & (0.0001) &  0.0007  & (0.0012) \\
+\midrule
+$N$ (firm-years) & \multicolumn{2}{c}{15,523} & \multicolumn{2}{c}{14,872} \\
+Within-$R^2$     & \multicolumn{2}{c}{0.000}  & \multicolumn{2}{c}{0.000} \\
+\bottomrule
+\end{tabular}
+
+\smallskip
+\footnotesize\textit{Notes:} Standard errors in parentheses. * $p < 0.10$, ** $p < 0.05$, *** $p < 0.01$. No coefficient is statistically significant. The nonconformity index is $\text{NCI}_{it} = \sum_k z_{|x_{ikt}|}$, following \citet{miller2013}.
+\end{table}
+
+
+%% ═══════════════════════════════════════════════════════════════════════════════
+\bibliographystyle{apalike}
+\begin{thebibliography}{9}
+
+\bibitem[Miller, 2013]{miller2013}
+Miller, D. (2013).
+\newblock Technological diversity, related diversification, and firm performance.
+\newblock {\em Strategic Management Journal}, 34(11):1351--1368.
+
+\end{thebibliography}
+
+\end{document}

@@ -63,8 +63,8 @@ These are **standardized deviations from 3-digit SIC industry medians** (number 
 - ROA full quadratic optimum: **0.1951** (M2 gap: 27.4%, M1 gap: 13.5%)
 - Tobin's Q full quadratic optimum: **2.9461** (M2 gap: 7.8%, M1 gap: 7.8%)
 - Cross terms jointly significant: ROA χ²(15)=56.0 p<0.001; Tobin's Q χ²(15)=37.5 p=0.001
-- Conformity index has no predictive power after absorbing firm/year FEs
+- Nonconformity index (Miller 2013: NCI = Σ z_{|x_k|}) has no predictive power after absorbing firm/year FEs
 
-## Conformity Index Output Files
-- `output/{outcome}/conformity_index_main.csv` — summary stats and optimal conformity level
-- `output/{outcome}/conformity_index_coefficients.csv` — coefficient table
+## Nonconformity Index Output Files
+- `output/{outcome}/nonconformity_index_main.csv` — summary stats and optimal nonconformity level
+- `output/{outcome}/nonconformity_index_coefficients.csv` — coefficient table

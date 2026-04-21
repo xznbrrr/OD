@@ -497,47 +497,61 @@ def _conformity_index_analysis(
     df: pd.DataFrame,
     outcome: str,
 ) -> Optional[Tuple[pd.DataFrame, pd.DataFrame]]:
-    """Quadratic FE regression of outcome on conformity_index (Miller 2013 aggregate)."""
-    if "conformity_index" not in df.columns:
+    """Quadratic FE regression of outcome on nonconformity index (Miller 2013 aggregate).
+
+    Miller (2013) defines the composite nonconformity index as the sum of the
+    standardised absolute deviations across all six strategy dimensions:
+        NCI_it = sum_k z_{|x_{ikt}|}
+    where z denotes within-sample standardisation (mean 0, SD 1) of the
+    absolute deviation |x_{ikt}|.  Higher values indicate greater overall
+    strategic nonconformity.
+    """
+    # Compute nonconformity index from the x_ deviation variables
+    available_x = [c for c in CORE_VARS if c in df.columns]
+    if len(available_x) < len(CORE_VARS):
         return None
-    required = ["gvkey", "year", outcome, "conformity_index"]
+    required = ["gvkey", "year", outcome] + available_x
     sub = df[[c for c in required if c in df.columns]].dropna().copy()
-    sub = _create_lagged_columns(sub, "gvkey", ["conformity_index"])
-    sub = sub.dropna(subset=[outcome, "lag_conformity_index"]).copy()
+    # Nonconformity index = sum of standardised |x_k|  (Miller 2013)
+    abs_vals = sub[available_x].abs()
+    z_abs = (abs_vals - abs_vals.mean()) / abs_vals.std()
+    sub["nonconformity_index"] = z_abs.sum(axis=1)
+    sub = _create_lagged_columns(sub, "gvkey", ["nonconformity_index"])
+    sub = sub.dropna(subset=[outcome, "lag_nonconformity_index"]).copy()
     if len(sub) < 50:
         return None
     sub[outcome] = winsorize_series(sub[outcome])
-    sub["lag_conformity_index"] = winsorize_series(sub["lag_conformity_index"])
-    sub["lag_conformity_index_sq"] = sub["lag_conformity_index"] ** 2
-    regressors = ["lag_conformity_index", "lag_conformity_index_sq"]
+    sub["lag_nonconformity_index"] = winsorize_series(sub["lag_nonconformity_index"])
+    sub["lag_nonconformity_index_sq"] = sub["lag_nonconformity_index"] ** 2
+    regressors = ["lag_nonconformity_index", "lag_nonconformity_index_sq"]
     result = _fit_absorbed_ols(
         sub,
         outcome=outcome,
         regressors=regressors,
         absorb_cols=["gvkey", "year"],
         cluster_mode="two_way",
-        model_name="conformity_quadratic",
+        model_name="nonconformity_quadratic",
         spec_name="main",
     )
-    beta1 = result.params.get("lag_conformity_index", np.nan)
-    beta2 = result.params.get("lag_conformity_index_sq", np.nan)
-    bounds = (float(sub["lag_conformity_index"].min()), float(sub["lag_conformity_index"].max()))
+    beta1 = result.params.get("lag_nonconformity_index", np.nan)
+    beta2 = result.params.get("lag_nonconformity_index_sq", np.nan)
+    bounds = (float(sub["lag_nonconformity_index"].min()), float(sub["lag_nonconformity_index"].max()))
     x_star, val_star, hit_bound = solve_1d_quadratic_optimum(beta1, beta2, bounds)
     coef_map = result.coefficient_table.set_index("term")
     summary_row = {
         "outcome": outcome,
-        "variable": "conformity_index",
+        "variable": "nonconformity_index",
         "n_obs": result.n_obs,
         "n_firms": int(sub["gvkey"].nunique()),
         "n_years": int(sub["year"].nunique()),
         "r2_within": result.r2_within,
         "cluster_mode_used": result.cluster_mode_used,
         "coef_linear": beta1,
-        "se_linear": coef_map.loc["lag_conformity_index", "std_error"] if "lag_conformity_index" in coef_map.index else np.nan,
-        "p_linear": coef_map.loc["lag_conformity_index", "p_value"] if "lag_conformity_index" in coef_map.index else np.nan,
+        "se_linear": coef_map.loc["lag_nonconformity_index", "std_error"] if "lag_nonconformity_index" in coef_map.index else np.nan,
+        "p_linear": coef_map.loc["lag_nonconformity_index", "p_value"] if "lag_nonconformity_index" in coef_map.index else np.nan,
         "coef_quadratic": beta2,
-        "se_quadratic": coef_map.loc["lag_conformity_index_sq", "std_error"] if "lag_conformity_index_sq" in coef_map.index else np.nan,
-        "p_quadratic": coef_map.loc["lag_conformity_index_sq", "p_value"] if "lag_conformity_index_sq" in coef_map.index else np.nan,
+        "se_quadratic": coef_map.loc["lag_nonconformity_index_sq", "std_error"] if "lag_nonconformity_index_sq" in coef_map.index else np.nan,
+        "p_quadratic": coef_map.loc["lag_nonconformity_index_sq", "p_value"] if "lag_nonconformity_index_sq" in coef_map.index else np.nan,
         "optimal_x": x_star,
         "optimal_surface_value": val_star,
         "optimal_hits_bound": hit_bound,
@@ -837,8 +851,8 @@ def run_outcome_analysis(
     conf_result = _conformity_index_analysis(df, outcome)
     if conf_result is not None:
         conf_summary, conf_coefs = conf_result
-        _save_dataframe(conf_summary, outcome_dir / "conformity_index_main.csv")
-        _save_dataframe(conf_coefs, outcome_dir / "conformity_index_coefficients.csv")
+        _save_dataframe(conf_summary, outcome_dir / "nonconformity_index_main.csv")
+        _save_dataframe(conf_coefs, outcome_dir / "nonconformity_index_coefficients.csv")
 
     if all(additive_hit_bounds):
         extra_warning_rows.append(
